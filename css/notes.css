@@ -1,0 +1,262 @@
+table th .columntitle {
+	display: inline-block !important;
+}
+
+li
+{
+  list-style-type: none;
+}
+
+.newgroupform {
+	margin-left:20px;
+	margin-bottom:20px;
+	position:absolute
+}
+
+
+.normaltext {
+	font-size:80%;
+	margin-left: 4px;
+}
+
+.boldtext {
+	font-size:92%;
+	font-weight:bold;
+}
+.ownertext {
+	position:relative;
+	font-size:80%;
+	color:#FF8C00;
+	padding-left: 12px;
+}
+
+#spanaction {
+	display:inline-block;
+	position:relative;
+	padding-top:4px;
+	float:right
+}
+
+#ok {
+	z-index: 1;
+}
+
+#newnote #ok {
+	z-index: 1;
+	float: left;
+	margin-left: 16px;
+	margin-right: 4px;
+}
+
+#ok i {
+	margin-right: 0.36em;
+}
+
+.apanel {
+	width:100%;
+	border:solid 1px #e4e4e4;
+	margin-bottom:20px;
+	height:55px;
+	display:none
+}
+
+.spanpanel {
+	padding-bottom:3px;
+	margin-left: 30px;
+	line-height:50px;
+}
+
+table td.notename span.name span.nametext {font-weight:bold; }
+
+table td.notename .nametext {
+	/*position: absolute;*/
+	left: 68px;
+	padding: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 800px;
+	height: 100%;
+	font-weight:bold;
+}
+
+table td.notename a:hover {
+	text-decoration: none;
+}
+
+#actionbtnBrowse, #actionbtnSave {
+    margin:0 !important;
+    width:60px;
+}
+
+#notestable {
+	position: relative;
+	top: -1px;
+	box-shadow: 0px 0px 1px 1px rgba(0,0,0,0.1);
+	z-index: 1px;
+	display: inline-block;
+	width: 80%;
+}
+
+.itext {
+	font-weight:bold;
+	font-size:120%;
+	padding-left:4px;
+	padding-top:3px;
+}
+
+input.editnote {
+	line-height: 1.5;
+	padding: 2px 0px 4px 5px;
+	margin-top:10px;
+	position: relative;
+	width: 400px;
+}
+
+.border {
+		border-style: solid;
+		border-width: 2px;
+		border-color: #444;
+}
+
+
+.avatar {
+	vertical-align: middle;
+	display: inline-block;
+	margin-right: 5px;
+	border-radius: 25px;
+}
+
+.avatar img {
+	border-radius: 25px;
+}
+
+.newnote-span {
+	float: right;
+	margin-right: 82px;
+	line-height: 50px;
+	white-space: nowrap;
+}
+
+.newnote-span div {
+	display: inline-block;
+}
+	
+table.hidden {
+		display: none;
+}
+
+table.visible {
+	display: inline;
+}
+
+a.action > img {
+		max-height: 16px;
+		max-width: 16px;
+		vertical-align: text-bottom;
+}
+
+.oc-dialog-title, .info {
+	padding: 10px 3px 10px 0;
+}
+
+
+.icon-trash-empty {
+	text-decoration:none;
+	color:#c5c5c5;
+	font-size:16px;
+	background-image:none;
+}
+
+td.notename {
+	height:34px;
+}
+
+table#notestable th .columntitle.name {
+	margin: 0;
+	padding: 15px 21px;
+}
+
+.notename i {
+	margin-left: 10px;
+	margin-right: 6px;
+}
+
+.oc-dialog .notetitle {
+	margin-bottom: 12px;
+	margin-top: 8px;
+	text-left;
+	font-size:128%;
+	width: 90%;
+	font-weight:bold;
+}
+
+.oc-dialog .oc-dialog-close {
+	height: 10px;
+	right: 12px;
+	top: 11px;
+	width: 10px;
+}
+
+.oc-dialog .icon-cancel-circled {
+	color:#006b93;
+	display:inline;
+}
+
+.oc-dialog .note_status {
+	padding-left: 12px;
+}
+
+
+.button-row {
+	margin-right: 0;
+	margin-left: 0;
+}
+
+.float-right {
+	float: right;
+}
+
+.size  {
+	padding-right: 12px;
+}
+
+#notebooks {
+	display: inline-block;
+	width: 19%;
+	vertical-align: top;
+}
+
+#notebooks .jqueryFileTree li {
+	background: none;
+	padding: 2px 5px;
+	background: #34495e;
+}
+
+#notebooks .jqueryFileTree li a {
+background:  #34495e;
+color: #ffffff;
+}
+
+#notebooks ul.jqueryFileTree {
+	font-size: 12px;
+}
+
+.notespanel {
+	margin-bottom: 18px;
+	background-color: #fff;
+	border: 0px solid #e4e4e4;
+	border-radius: 0px;
+	position: relative;
+}
+
+#notestable #headerDue {
+	width: 100%;
+}
+
+#notestable #fileList a {
+	padding-right: 0px;
+}
+
+#notestable .col-xs-8 {
+	width: auto;
+}

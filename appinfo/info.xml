@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<info>
+	<id>notes</id>
+	<name>Notes</name>
+	<licence>AGPL</licence>
+	<author>Frederik Orellana</author>
+	<require>6.0.3</require>
+	<version>0.1</version>
+	<description>Joplin-compatible markdown notes</description>
+</info>
+
