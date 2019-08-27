@@ -1,4 +1,421 @@
+var noteDragOptions = {
+		revert: true,
+		revertDuration: 300,
+		opacity: 0.7,
+		zIndex: 100,
+		appendTo: 'body',
+		cursorAt: { left: 24, top: 18 },
+		cursor: 'move',
+		start: function(event, ui){
+			$('div.app-notes div#notes').css('overflow-x', 'visible');
+			$('div.app-notes div#notes').css('overflow-y', 'visible');
+		},
+		stop: function(event, ui) {
+			$('div.app-notes div#notes').css('overflow-x', 'auto');
+			$('div.app-notes div#notes').css('overflow-y', 'auto');
+			}
+	};
+
+var notebookDragOptions = {
+		revert: true,
+		revertDuration: 300,
+		opacity: 0.7,
+		zIndex: 100,
+		appendTo: 'body',
+		cursorAt: { left: 24, top: 18 },
+		cursor: 'move',
+		start: function(event, ui){
+		},
+		stop: function(event, ui) {
+		}
+	};
+
+//sane browsers support using the distance option
+if ( $('html.ie').length === 0) {
+	noteDragOptions['distance'] = 20;
+	notebookDragOptions['distance'] = 20;
+}
+
+var notebookDropOptions = {
+		hoverClass: "canDrop",
+		greedy: true,
+		drop: function( event, ui ) {
+			var targetPath = "";
+			targetPath = targetPath+$(this).find('a').first().attr('rel');
+			/*$(this).parents('li.directory').each(function(){
+				targetPath = $(this).find('a').first().attr('rel')+targetPath;
+			});*/
+			
+			if(ui.draggable.find('td.notename input.fileselect').length>0){
+				var files = $('#notestable td.notename input.fileselect:checked');
+				if (files.length===0) {
+					// single one selected without checkbox?
+					files = ui.draggable.closest('tr').find('td.notename input.fileselect');
+				}
+				var baseDir = $('#app-content-notes').attr('basedir');
+				files.each(function(){
+					var name = $(this).attr('path').split(/\//).pop();
+					var src = $(this).attr('path');
+					var dest = /*baseDir+*/targetPath+name;
+					//alert(src+'-->'+dest);
+					moveNote(src, dest);
+				});
+				}
+			
+			if(ui.draggable.hasClass('directory') || ui.draggable.find('li.directory a').length>0){
+				if(ui.draggable.closest('li.directory').find('a.chosen').length){
+					var folders = $('#notebooks a.chosen');
+				}
+				if(typeof folders==='undefined' ||  folders.length===0) {
+					// single one selected without choosing?
+					folders = ui.draggable.closest('li.directory').find('a');
+				}
+				var baseDir = $('#app-content-notes').attr('basedir');
+				folders.each(function(){
+					var folderPath = "";
+					/*$(this).parents('li.directory').each(function(){
+						folderPath = $(this).find('a').first().attr('rel')+folderPath;
+					});*/
+					folderPath = $(this).closest('li.directory').find('a').first().attr('rel')+folderPath;
+					folderPath = folderPath.replace(/\/$/, "");
+					var name = folderPath.split(/\//).pop();
+					var src = /*baseDir+*/folderPath;
+					var dest = /*baseDir+*/targetPath+name;
+					var count = (folderPath.match(/\//g) || []).length;
+					var len = folderPath.length;
+					if(targetPath.substr(0, len)!=folderPath){
+						//alert(src+'-->'+dest);
+						moveNotebook(src, dest);
+					}
+				});
+			}
+			
+			return !event;
+			
+		},
+		tolerance: 'pointer'
+	};
+
+var tagDropOptions = {
+		hoverClass: "canDrop",
+		greedy: true,
+		drop: function( event, ui ) {
+			var targetTag = $(this).closest('li[data-id^=tag-]').find('i').first().attr('data-tag');
+			
+			if(ui.draggable.find('td.notename input.fileselect').length>0){
+				var files = $('#notestable td.notename input.fileselect:checked');
+				if (files.length===0) {
+					// single one selected without checkbox?
+					files = ui.draggable.closest('tr').find('td.notename input.fileselect');
+				}
+				files.each(function(){
+					//alert($(this).attr('path')+'-->'+targetTag);
+					tagNote($(this).closest('tr').attr('data-id'), targetTag);
+				});
+				}
+			
+			if(ui.draggable.hasClass('directory') || ui.draggable.find('li.directory a').length>0){
+				// Ignore dragged folders
+			}
+			
+			return !event;
+			
+		},
+		tolerance: 'pointer'
+	};
+
+function tagNote(fileid, tagid){
+	$.ajax({
+		url: OC.filePath('meta_data', 'ajax', 'updateFileInfo.php'),
+		async: false,
+		timeout: 200,
+		data: {
+			fileid: fileid,
+			tagid: tagid
+		},
+		type: "POST",
+		success: function(result) {
+			listNotes();
+		},
+	});
+}
+
+function updateTags(){
+	var fileIds = $('#notestable #fileList tr').map(function() {
+    	return $(this).attr('data-id');
+    }).get();
+	$('#loadTags ul#tags li[data-id^=tag-]').remove();
+	$.ajax({
+		url: OC.filePath('meta_data', 'ajax', 'getTags.php'),
+		data: {sortValue: 'color', direction: 'asc', onlyFileId: fileIds.join(':')},
+		success: function(response){
+		if(response){
+				var tags = '';
+				$.each(response['tags'].reverse(), function(key, value) {
+					$('#loadTags ul li#tags').show();
+					tags = tags+'\
+					<li data-id="tag-'+value.id+'">\
+					<i class="icon icon-tag tag-'+colorTranslate(value.color)+'" data-tag="'+value.id+'"></i>\
+					<span>'+value.name+'</span>\
+					</li>';
+				});
+				$('#loadTags ul#tags').append(tags);
+				$('#loadTags ul#tags li').click(function(ev){
+					if(!ev.metaKey && !ev.ctrlKey){
+						$('#loadTags ul#tags li').removeClass('chosen');
+					}
+					if($(ev.target).closest('li').hasClass('chosen')){
+						$(ev.target).closest('li').removeClass('chosen');
+					}
+					else{
+						$(ev.target).closest('li').addClass('chosen');
+					}
+					listNotes();
+				});
+			}
+		$('#notebooks #loadTags li').droppable(tagDropOptions);
+		}
+	});
+}
+
+function deleteNotes(paths){
+	$('#deleteNoteAlert').dialog({ buttons: [ {id:'delete_note', text: t('notes', 'Delete'),
+		click: function() {
+			$.post(OC.filePath('notes', 'ajax', 'actions.php'), {name: paths , action: "deletenote"} , function (jsondata){
+				if(jsondata.status == 'success' ) {
+					listNotes();
+				}
+				else{
+					OC.dialogs.alert(t('notes',  jsondata.data.message) , t('notes',  jsondata.data.title)) ;
+					}
+				});
+			$(this).dialog( 'close' );
+		}
+	},
+	{id:'delete_note_cancel', text: 'Cancel',
+		click: function() {
+			$(this).dialog( 'close' );
+		}
+	}]});
+}
+
+function moveNote(path, target){
+	$('#moveNoteAlert').dialog({ buttons: [ {id:'move_note', text: t('notes', 'Move'),
+		click: function() {
+			$.post(OC.filePath('notes', 'ajax', 'actions.php'), {name: path, target: target , action: "movenote"} , function (jsondata){
+				if(jsondata.status == 'success' ) {
+					listNotes();
+				}
+				else{
+					OC.dialogs.alert(t('notes',  jsondata.data.message) , t('notes',  jsondata.data.title)) ;
+				}
+			});
+			$(this).dialog( 'close' );
+		}
+	},
+	{id:'delete_note_cancel', text: 'Cancel',
+		click: function() {
+			$(this).dialog( 'close' );
+		}
+	}]});
+}
+
+function moveNotebook(path, target){
+	$('#moveNotebookAlert').dialog({ buttons: [ {id:'move_notebook', text: t('notes', 'Move'),
+		click: function() {
+			$.post(OC.filePath('notes', 'ajax', 'actions.php'), {name: path, target: target , action: "movenotebook"} , function (jsondata){
+				if(jsondata.status == 'success' ) {
+					createNotebookFolderTree();
+				}
+				else{
+					OC.dialogs.alert(t('notes',  jsondata.data.message) , t('notes',  jsondata.data.title)) ;
+					}
+				});
+			$(this).dialog( 'close' );
+		}
+	},
+	{id:'delete_note_cancel', text: 'Cancel',
+		click: function() {
+			$(this).dialog( 'close' );
+		}
+	}]});
+}
+
+function searchNotes(query){
+	var tags = [];
+	$('#loadTags ul#tags li.chosen').each(function(){
+		tags.push($(this).find('i').first().attr('data-tag'));
+	});
+	var folders = [];
+	$('#notebooks a.chosen').each(function(){
+		folders.push($(this).closest('li.directory').find('a').first().attr('rel'));
+	});
+	$.post(OC.filePath('notes', 'ajax', 'actions.php'), {name: query, folders: folders, tags: tags, action: "searchnotes" } , function ( jsondata ){
+		if(jsondata.status == 'success' ) {
+			updateNotesList(tags, jsondata.data)
+		}
+		else{
+			OC.dialogs.alert(t('notes',  jsondata.data.message) , t('notes',  jsondata.data.title)) ;
+		}
+	});
+}
+
+function setTableListeners(){
+	$("#notestable td .delete-note").live('click', function(ev) {
+		ev.stopPropagation();
+		var path = $(ev.target).closest('tr').find('input.fileselect').attr('path') ;
+		deleteNotes([path]);
+	});
+	
+	$("#notestable th#headerDelete a.delete-note").click(function(ev) {
+		ev.stopPropagation();
+		var paths = [];
+		$('input.fileselect:checked').each(function(){
+			paths.push($(this).attr('path'))
+		});
+		deleteNotes(paths);
+	});
+
+	$(document).click(function(e){
+		if($(e.target).attr('notename')){
+			editNote($(e.target).attr('notename'));
+		}
+	});
+	
+	$('#notestable tr').draggable(noteDragOptions);
+	
+	$('input#select_all_files').change(function(){
+		if(this.checked) {
+			$('input.fileselect').prop('checked', true);
+			$('#notestable th#headerDelete a.delete-note').removeClass('hidden');
+		}
+		else{
+			$('input.fileselect').prop('checked', false);
+			$('#notestable th#headerDelete a.delete-note').addClass('hidden');
+		}
+	});
+	
+	$('#notestable td span.nametext').live('click', function(ev){
+		var path = $(ev.target).closest('a').find('input.fileselect').first().attr('path');
+		var dir = OC.dirname(path);
+		var filename = OC.basename(path);
+		// Text
+		window.showFileEditor(dir, filename).then(function () {
+			$('#notes').fadeTo('slow', 0.1);
+			$('#notebooks').fadeTo('slow', 0.1);
+			$('#app-content-notes #search').fadeTo('slow', 0.1);
+			// Markdown
+			var editor = new OCA.Files_Markdown.Editor($('#editor'), $('head')[0], dir);
+			window.aceEditor.setAutoScrollEditorIntoView(true);
+			editor.init(window.aceEditor.getSession());
+		}).then(function(){
+			$('#editor_close').click(function(){
+				$('#notes').fadeTo('slow', 1);
+				$('#notebooks').fadeTo('slow', 1);
+				$('#app-content-notes #search').fadeTo('slow', 1);
+				// The title might have changed
+				newName = $('#md_preview h1:first').text();
+				path = $('#editor.ace_editor').attr('data-dir')+'/'+ $('#editor.ace_editor').attr('data-filename');
+				$('#notestable #fileList input.fileselect[path="'+path+'"]').parent().find('.nametext').text(newName);
+			});
+		});
+	});
+	
+	$('input.fileselect').change(function(){
+		if(this.checked || $('input.fileselect:checked').length){
+			$('#notestable th#headerDelete a.delete-note').removeClass('hidden');
+			if($('input.fileselect:checked').length==$('input.fileselect').length){
+				$('input#select_all_files').prop('checked', true);
+			}
+			else{
+				$('input#select_all_files').prop('checked', false);
+			}
+		}
+		else{
+			$('#notestable th#headerDelete a.delete-note').addClass('hidden');
+			$('input#select_all_files').prop('checked', false);
+		}
+	});
+	$('.dropdown-filter-dropdown').remove();
+	var options = {};
+	//options.columnSelector = '.metakey.predefined';
+	var tags = [];
+	var tagids = [];
+	$('#loadTags ul#tags li.chosen').each(function(){
+		tags.push($(this).find('span').first().text());
+		tagids.push($(this).find('i').first().attr('data-tag'));
+	});
+	// TODO: perhaps generalize this beyond hiding todo.done - make hide_column_key_values configurable
+	if(tags.length==1 && tags[0]=='todo'){
+		options.hide_column_key_values = {'status':'done'};
+	}
+	$('table#notestable').excelTableFilter(options);
+	
+	if(tagids.length==1){
+		$('table#notestable tr td select, #notestable tr td .datepicker, #notestable tr td input').change({tagid: tagids[0]}, function(ev){
+			var fileid = $(this).parents('tr').first().attr('data-id');
+			var tagid = ev.data.tagid;
+			var keyname = $(this).parents('td').attr('column');
+			var keyid = $('#notestable thead th div.columntitle[keyname='+keyname+']').attr('keyid');
+			var val = $(this).val();
+			$.ajax({
+				url: OC.filePath('meta_data', 'ajax', 'tagOps.php'),
+				type: "POST",
+				data: {
+				tagOp: 'update_file_key',
+				keyId: keyid,
+				tagId: tagid,
+				fileId: fileid,
+				//type: 'controlled',
+				value: val
+				},
+				success: function(result) {
+				}
+			});
+		});
+	}
+	
+	$('.datepicker').each(function(){
+		if($(this).hasClass('hasDatepicker')){
+			return false;
+		}
+		var valdate = $(this).val();
+		$(this).datepicker();
+		$(this).datepicker("option", "dateFormat", "yy-mm-dd");
+		if(typeof valdate!=='undefined' && valdate!=''){
+			$(this).datepicker("setDate", new Date(valdate+"T12:00:00-00:00"));
+		}
+	});
+
+}
+
+function addNote(position){
+	if($('#newnote .editnote').val() != "") {
+	var params = {name: $('#newnote .editnote').val(), template: $('#template').val(), 
+			action: "addnote" };
+	if(typeof position !== 'undefined'){
+		params.position = position;
+	} 
+	$.post(OC.filePath('notes', 'ajax', 'actions.php'), params , function ( jsondata ){
+		if(jsondata.status == 'success' ) {
+			//$('#newnotebook').slideToggle();
+			$('#newnotebook .editnote').val("");
+			listNotes();
+		}
+		else{
+			OC.dialogs.alert(t('notes',  jsondata.data.message) , t('notes',  jsondata.data.title)) ;
+		}
+	});
+	}
+}
+
 $(document).ready(function() {
+
+	$("#app-content-notes input#search").on('keyup', function (e) {
+		if (e.keyCode == 13) {
+			searchNotes($("#app-content-notes input#search").val());
+		}
+	});
 	
 	$('a#createNote').click(function() {
 		$('#newnote').slideToggle();
@@ -16,33 +433,26 @@ $(document).ready(function() {
 		if($('#newnotebook .editnote').val() != "") {
 			$.post(OC.filePath('notes', 'ajax', 'actions.php'), {name: $('#newnotebook .editnote').val(), action: "addnotebook" } , function ( jsondata ){
 				if(jsondata.status == 'success' ) {
-					$('#newnotebook').slideToggle();
+					//$('#newnotebook').slideToggle();
 					$('#newnotebook .editnote').val("");
-					location.reload();
+					createNotebookFolderTree();
 				}
 				else{
-					OC.dialogs.alert( jsondata.data.message , jsondata.data.title );
+					OC.dialogs.alert(t('notes',  jsondata.data.message) , t('notes',  jsondata.data.title)) ;
 				}
 			});
 		}
 	});
 	
 	$('#newnote #ok').on('click', function() {
-		if( $('#newnote .editnote').val() == "") {
-			return false;
-		}
-		$('#dialogalert').dialog({ buttons: [
-			{id:'new_note', text: 'OK', click: function() {
-			OC.UserGroup.joinGroup($('#newnote .editnote').val());
-			$(this).dialog('close');
-			}},
-			{id:'new_note_cancel', text: 'Cancel',
-			click: function() {
-				$(this).dialog('close');
-			}
-			}]});
+		
+	  if (navigator.geolocation) {
+	    navigator.geolocation.getCurrentPosition(addNote);
+	  } else {
+	  	addNote();
+	  }
 	});
-
+	
 	$('#newnotebook #cancel').click(function() {
 		$('#newnotebook').slideToggle();
 	});
@@ -51,51 +461,10 @@ $(document).ready(function() {
 		$('#newnote .editnote').val("");
 		$('#newnote').slideToggle();
 	});
+	
+	setTableListeners();
 
-	$("#notestable td .delete-note").live('click', function(ev) {
-		ev.stopPropagation();
-		var role = $(this).closest('tr').attr('role') ;
-		var noteSelected = $(this).closest('tr').attr('note') ;
-		var textHtml = $('#dialogalert').html().replace(
-			role=='owner'?t('notes', 'Unshare'):t('notes', 'Delete'),
-				role=='owner'? t('notes', 'Delete'):t('notes', 'Unshare'));
-		 $('#dialogalert').html(textHtml);
-		 $('#dialogalert').dialog({ buttons: [ { id:'delete_unshare_note', text: role == 'owner'?t('notes', 'Delete'):t('notes', 'Unshare'),
-				click: function() {
-			if (role == 'owner' || role == 'admin') {
-				$.post(OC.filePath('notes', 'ajax', 'actions.php'), { note : noteSelected , action : "deletenote"} , function ( jsondata){
-					if(jsondata.status == 'success' ) {
-						location.reload();
-					}
-					else{
-						OC.dialogs.alert( jsondata.data.message , jsondata.data.title ) ;
-						}
-					});
-			}
-			else{
-				$.post(OC.filePath('notes', 'ajax', 'actions.php'), { note : noteSelected , action : "unsharenote"} , function ( jsondata){
-					if(jsondata.status == 'success' ) {
-						location.reload();
-					}
-					else{
-						OC.dialogs.alert( jsondata.data.message , jsondata.data.title ) ;
-					}
-				});
-			}
-			$(this).dialog( 'close' );
-		}},
-		{id:'delete_unshare_note_cancel', text: 'Cancel',
-			click: function() {
-				$(this).dialog( 'close' );
-			}
-		}]});
-	});
-
-	$(document).click(function(e){
-		if($(e.target).attr('notename')){
-			editNote($(e.target).attr('notename'));
-		}
-	});
+	updateTags();
 	
 });
 

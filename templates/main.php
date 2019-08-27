@@ -1,11 +1,11 @@
 <div id="app-content" style="transition: all 0.3s ease 0s;">
-	<div id="app-content-notes" class="viewcontainer">
+	<div id="app-content-notes" basedir="<?php echo $_['notesdir'];?>" class="viewcontainer">
 		<div id="controls">
 		
 			<div class="button-row">
 				<div class="actions creatable">
 					<a id="createNotebook" class="btn btn-primary btn-flat" href="#">
-						<i class="icon-folder"></i>
+						<i class="icon-folder"></i><i class="icon-plus"></i>
 						<i class="icon"></i><?php p($l->t("New notebook"));?>
 					</a>
 					<a id="createNote" class="btn btn-primary btn-flat" href="#">
@@ -13,9 +13,7 @@
 						<?php p($l->t("New note"));?>
 					</a>
 					<span class="float-right">
-						<select id="priority"><option selected>Priority</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>
-						<select id="status"><option selected>Status</option><option value="0">0%</option><option value="10">10%</option><option value="20">20%</option><option value="30">30%</option><option value="40">40%</option><option value="50">50%</option><option value="60">60%</option><option value="70">70%</option><option value="80">80%</option><option value="90">90%</option><option value="100">100%</option></select>
-						<input type="text" id="search" placeholder="<?php p($l->t('Search'));?>" />
+						<input type="text" id="search" placeholder="<?php p($l->t('Search notes'));?>" />
 						<!--<a id="searchNotes" type="button" class="btn btn-default btn-flat">
 							<?php p($l->t("Search"));?>-->
 						</a>
@@ -26,13 +24,14 @@
 			<div id="newnote" class="apanel">
 				<span class="spanpanel" >
 					<input class="editnote" type="text" placeholder="<?php p($l->t("New note name"));?>" />
-					<select id="priority"><option selected>Template</option>
+					<select id="template" title="<?php p($l->t("Template"));?>"><option selected></option>
 					<?php foreach($_['templates'] as $template){
-						echo("<option value=\"".$template['path']."\">".$template['name']."</option>");
+						$path = preg_replace('|^files/|', '', $template['path']);
+						echo("<option value=\"".$path."\">".$template['title']."</option>");
 					}?>
 					</select>
 					<span class="newnote-span">
-						<div id="ok" class="btn-note" original-title="">
+						<div id="ok" class="btn-note" title="<?php p($l->t("Create new note"));?>">
 							<a class="btn btn-default btn-flat" href="#"><?php p($l->t("Add"));?></a>
 						</div>
 						<div id="cancel" class="btn-note" original-title="">
@@ -72,43 +71,47 @@
 	<div id="notebooks">
 		<div><i class="icon icon-folder"></i>Notebooks</div>
 		<div id="loadFolderTree"></div>
-		<div><i class="icon icon-tag"></i>Tags</div>
-		<div id="loadTags"></div>
+		<div><i class="icon icon-tags"></i>Tags</div>
+		<div id="loadTags">
+			<ul id="tags"></ul>
+		</div>
 	</div>
 
+	<div id="notes">
 	<table id="notestable" class="panel">
 	<thead class="panel-heading" >
 		<tr>
 			<th id="headerName" class="column-name">
 				<div id="headerName-container" class="row">
-					<div class="col-xs-3 col-sm-6">
+					<div class="col-xs-4 col-sm-1">
+						<input type="checkbox" id="select_all_files" class="select-all"/>
+						<label for="select_all_files"></label>
+					</div>
+						<div>
 						<div class="name sort columntitle" data-sort="descr">
 							<span class="text-semibold"><?php p($l->t("Name"));?></span>
 						</div>
 					</div>
 				</div>
 			</th>
-			<th id="headerPriority" class="column-priority">
-				<div class="priority sort columntitle" data-sort="public">
-					<span><?php p($l->t("Priority"));?></span>
+<!--			<th id="headerPath" class="column-path">
+				<div class="path sort columntitle" data-sort="public">
+					<span><?php p($l->t("Path"));?></span>
 				</div>
 			</th>
-			<th id="headerStatus" class="column-status">
-				<div class="status sort columntitle" data-sort="size">
-					<span><?php p($l->t("Status"));?></span>
+ 			<th id="headerTags" class="column-tags">
+				<div class="tags sort columntitle" data-sort="size">
+					<span><?php p($l->t("Tags"));?></span>
+				</div>
+			</th>-->
+			<th id="headerDate" class="column-date">
+				<div class="date sort columntitle" data-sort="size">
+					<span><?php p($l->t("Date"));?></span>
 				</div>
 			</th>
-			<th id="headerCreated" class="column-created">
-				<div class="created sort columntitle" data-sort="size">
-					<span><?php p($l->t("Created"));?></span>
-				</div>
+			<th id="headerDelete" class="column-delete">
+				<a href='#' title='<?php p($l->t('Delete all checked'));?>' class='delete-note icon icon-trash-empty hidden'></a>
 			</th>
-			<th id="headerDue" class="column-due">
-				<div class="due sort columntitle" data-sort="size">
-					<span><?php p($l->t("Due"));?></span>
-				</div>
-			</th>
-			<th></th>
 		</tr>
 	</thead>
 	
@@ -118,20 +121,24 @@
 $count = 0;
 foreach ($_['notes'] as $note) {
 	$count++;
-	echo "<tr>
+	echo "<tr data-id='".$note['fileinfo']['fileid']."'>
 		<td class='notename'>
 			<div class='row'>
 				<div class='col-xs-8 filelink-wrap'>
-					<a class='name'><i class='icon-pencil deic_green icon'></i>
-					<span class='nametext'>".$note['title']."</span></a>
-				</div>
-			</div>
-		</td>
-		<td><div class='priority'>".$note['priority']."</div></td>
-		<td><div class='status'>".$note['status']."</div></td>
-		<td><div class='created'>".$note['created']."</div></td>
-		<td><div class='due'>".$note['due']."</div></td>
-		<td><a href='#' original-title='Delete' class='delete-group action icon icon-trash-empty'></a></td>
+					<a class='name'>
+					<input id='select-files-".$count."' type='checkbox' class='fileselect' path='".$note['fileinfo']['path']."'/>
+					<!--<i class='icon-pencil deic_green icon'></i>-->
+					<span class='nametext'>".$note['metadata']['title']."</span>
+					</a>
+				</div>".
+				(empty($note['tags'])?"":OCA\Notes\Lib::mkTagIcons($note['tags'])).
+"			</div>
+		</td>".
+//		<td><div class='path' title='".(empty($note['fileinfo']['path'])?"":$note['fileinfo']['path'])."'>".
+//			(empty($note['fileinfo']['path'])?"":$note['fileinfo']['path'])."</div></td>".
+//"		<td><div class='tags'>".(empty($note['tags'])?"":implode(":", $note['tags']))."</div></td>"."
+"		<td class='date'><div class='date'>".(empty($note['metadata']['date'])?"":$note['metadata']['date'])."</div></td>
+		<td><a href='#' title='".$l->t("Delete")."' class='delete-note action icon icon-trash-empty'></a></td>
 	</tr>";
 }
 
@@ -139,20 +146,28 @@ foreach ($_['notes'] as $note) {
 		</tbody>
 		<tfoot>
 			<tr class="summary text-sm">
-				<td colspan="6">
-				<span class="info"><?php echo $count." notes"; ?></span>
+				<td colspan="5">
+				<span class="info"><?php echo $count." ".$l->t("note".($count>1||$count==0?"s":"")); ?></span>
 				</td>
 			</tr>
 		</tfoot>
 	</table>
+	</div>
 </div>
 
-<div id='dialogalert' title='Delete note confirmation' style='display:none;' >
-	<p>Are you sure you want to delete this note?</p>
+<div id='deleteNoteAlert' title=<?php p($l->t('Delete note confirmation'));?> style='display:none;' >
+	<p><?php p($l->t('Are you sure you want to delete this note?'));?></p>
 </div>
-<div id='dialogalert' title='Delete notebook confirmation' style='display:none;' >
-	<p>Are you sure you want to delete this notebook?</p>
+<div id='deleteNotebookAlert' title=<?php p($l->t('Delete notebook confirmation'));?> style='display:none;' >
+	<p><?php p($l->t('Are you sure you want to delete this notebook?'));?></p>
+</div>
+<div id='moveNoteAlert' title=<?php p($l->t('Delete note confirmation'));?> style='display:none;' >
+	<p><?php p($l->t('Are you sure you want to move this note?'));?></p>
+</div>
+<div id='moveNotebookAlert' title=<?php p($l->t('Delete notebook confirmation'));?> style='display:none;' >
+	<p><?php p($l->t('Are you sure you want to move this notebook?'));?></p>
 </div>
 
-
+	<div id="app-navigation">
+	</div>
 

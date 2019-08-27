@@ -74,7 +74,7 @@ table td.notename .nametext {
 	padding: 0;
 	overflow: hidden;
 	text-overflow: ellipsis;
-	max-width: 800px;
+	/*max-width: 800px;*/
 	height: 100%;
 	font-weight:bold;
 }
@@ -83,18 +83,33 @@ table td.notename a:hover {
 	text-decoration: none;
 }
 
+#loadTags ul#tags li:hover {
+	cursor: pointer;
+}
+
 #actionbtnBrowse, #actionbtnSave {
     margin:0 !important;
     width:60px;
 }
 
-#notestable {
-	position: relative;
-	top: -1px;
-	box-shadow: 0px 0px 1px 1px rgba(0,0,0,0.1);
-	z-index: 1px;
+div.app-notes div#notes {
+	position: absolute;
+	top: 78px;
+	margin-left: 6px;
+	/*box-shadow: 0px 0px 1px 1px rgba(0,0,0,0.1);*/
 	display: inline-block;
 	width: 80%;
+	overflow-x: auto;
+	overflow-y: auto;
+	/*min-width: 650px;*/
+	min-height: 400px;
+}
+
+div.app-notes div#notes table#notestable {
+	box-shadow: 0px 0px 1px 1px rgba(0,0,0,0.1);
+	border: 1px solid #e4e4e4;
+	margin-bottom: 0;
+	width: 100%;
 }
 
 .itext {
@@ -173,7 +188,7 @@ td.notename {
 
 table#notestable th .columntitle.name {
 	margin: 0;
-	padding: 15px 21px;
+	padding: 16px 5px 15px 21px;
 }
 
 .notename i {
@@ -228,7 +243,7 @@ table#notestable th .columntitle.name {
 
 #notebooks .jqueryFileTree li {
 	background: none;
-	padding: 2px 5px;
+	padding: 0;
 	background: #34495e;
 }
 
@@ -239,6 +254,10 @@ color: #ffffff;
 
 #notebooks ul.jqueryFileTree {
 	font-size: 12px;
+}
+
+#notebooks ul.jqueryFileTree ul.jqueryFileTree {
+	margin-left: 3px;
 }
 
 .notespanel {
@@ -259,4 +278,142 @@ color: #ffffff;
 
 #notestable .col-xs-8 {
 	width: auto;
+}
+
+.icon-plus {
+	font-size: 9.6px;
+	color: #006b93;
+	margin-left: -16px;
+	vertical-align: top;
+}
+
+.delete_folder {
+    display: none;
+}
+
+a:hover .delete_folder {
+	display: inline-block;
+}
+
+.directory {
+	white-space: nowrap;
+}
+
+.delete_folder {
+	float: right;
+}
+
+#notebooks ul.jqueryFileTree a {
+	padding: 2px 2px 2px 5px;
+}
+
+#notebooks ul.jqueryFileTree li a.chosen {
+	font-weight: bold;
+	background: #006b93;
+}
+
+#notestable .notename a.name input {
+	margin: 4px 3px;
+}
+
+#notestable th#headerName {
+	/*min-width: 200px;*/
+}
+
+#notestable th {
+	padding-right: 4px;
+}
+
+#notestable th#headerDelete a.delete-note {
+	margin-left: 14px;
+}
+
+#loadTags #tags li {
+	font-size: 12px;
+}
+
+#loadTags ul#tags li.chosen {
+	background-color: #ffffff;
+}
+
+table#notestable #fileList div.path {
+	/*max-width: 200px;*/
+	overflow: hidden;
+}
+
+table#notestable #fileList div.date {
+	min-width: 40px;
+	overflow: hidden;
+}
+
+table#notestable th#headerDate,
+table#notestable td.date,
+table#notestable th.column-last,
+table#notestable td.column-last {
+	min-width: 80px;
+}
+
+table#notestable tbody#fileList {
+    font-size: 12px;
+}
+
+table#notestable tbody#fileList tr td:not(.notename),
+table#notestable tbody#fileList th div.date {
+	padding-left: 0;
+}
+
+
+#content.app-notes div#editor_container {
+	padding-top: 108px;
+}
+
+#content.app-notes div#editor_container div#preview_wrapper {
+	padding-top: 182px;
+}
+
+#content.app-notes div#editor_container #preview_wrapper {
+	width: 49.5%;
+}
+
+#content.app-notes div#editor_container #preview_wrapper #md_preview {
+	padding-top: 6px;
+}
+
+#app-content-notes #editorcontrols {
+	margin-top: 0px;
+}
+#headerDelete .dropdown-filter-dropdown {
+	display: none;
+}
+
+table#notestable th .columntitle {
+    padding: 16px 5px 16px 0px;
+}
+
+table#notestable th:not(.predefined) .checkbox-container {
+	display: none;
+}
+
+input.datepicker {
+	width: 67px;
+	height: 22px;
+	margin: 0;
+	padding: 4px;
+}
+
+table:notestable span[data-tag] {
+    line-height: 7px;
+}
+
+#body-user td.notename span.label {
+    cursor: default;
+}
+
+td[column=spice] select option{
+	color: transparent;
+	text-shadow: 0 0 0 red;
+}
+
+.app-notes #app-navigation{
+	background-color: transparent;
 }

@@ -4,6 +4,8 @@
 
 //OCP\App::registerPersonal('notes', 'personalsettings');
 
+OCP\App::checkAppEnabled('meta_data');
+
 \OCP\App::addNavigationEntry(array(
 
 	// the string under which your app will be referenced in owncloud
