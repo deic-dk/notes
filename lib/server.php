@@ -160,17 +160,17 @@ class OC_Connector_Sabre_Server_notes extends OC_Connector_Sabre_Server_chooser 
 		
 		$fileMeta = \OCA\Notes\Lib::parseJoplinFileMeta($fileContent);
 		$path = \OCA\Notes\Lib::getPath($fileMeta, $rootNode);
-		
 		$oldFilePath = self::getFilePath($uri);
+		
 		\OCP\Util::writeLog('Notes', 'Checking existing file '.$uri.':'.$oldFilePath, \OCP\Util::WARN);
-		if(!empty(trim($oldFilePath))){
+		if(!empty(trim($oldFilePath)) && trim($oldFilePath, '/') != trim(path, '/')){
 			$oldFileMeta = \OCA\Notes\Lib::getNoteMeta(\OCA\Notes\Lib::$NOTES_DIR.$oldFilePath);
 			if(!empty($oldFileMeta) && 
 					(empty($fileMeta['parent_id']) && !empty($oldFileMeta['parent_id']) ||
 							!empty($fileMeta['parent_id']) && empty($oldFileMeta['parent_id']) ||
 							$fileMeta['parent_id']!=$oldFileMeta['parent_id'] ||
 					$fileMeta['title']!=$oldFileMeta['title'])){
-				if($fileMeta['type_']=='1'){
+						if($fileMeta['type_']=='1'){
 					// This is a note that's being moved (to another parent notebook).
 					// We move the note.
 					$result = OCA\Notes\Lib::rename(\OCA\Notes\Lib::$NOTES_DIR.$oldFilePath,

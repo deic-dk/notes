@@ -346,7 +346,7 @@ class Lib {
 	public static function checkJoplinFileMeta($note, &$noteBooks, &$tags, &$fileTags){
 		\OCP\Util::writeLog('Notes', 'Checking NOTE '.serialize($note['notemetadata']), \OCP\Util::WARN);
 		if(empty($note['notemetadata']['type_'])){
-			return;
+			$note['notemetadata']['type_'] = 1;
 		}
 		if((int)$note['notemetadata']['type_']==2){
 			// Notebook md file for this directory
@@ -449,14 +449,16 @@ encryption_cipher_text:
 encryption_applied: 0
 type_: 5";
 		\OC\Files\Filesystem::file_put_contents($path, $content);
-		return $id;
+		$fileInfo = \OC\Files\Filesystem::getFileInfo($path);
+		$fileInfo['noteid'] = $id;
+		return $fileInfo;
 	}
 	
-	private static function createTagMappingMDFile($dir, $noteId, $noteBooks, $tagId){
-		$meta = self::createNoteBookBaseMeta($noteBooks, $dir);
+	private static function createTagMappingMDFile($noteId, $noteBooks, $tagId){
+		$meta = self::createNoteBookBaseMeta($noteBooks);
 		$id = $meta['id'];
 		$nowDate = $meta['date'];
-		$path = $dir."/.".$id.".md";
+		$path = self::$NOTES_DIR.".".$id.".md";
 		$content = "id: $id
 note_id: $noteId
 tag_id: $tagId
@@ -468,7 +470,9 @@ encryption_cipher_text:
 encryption_applied: 0
 type_: 6";
 		\OC\Files\Filesystem::file_put_contents($path, $content);
-		return $id;
+		$fileInfo = \OC\Files\Filesystem::getFileInfo($path);
+		$fileInfo['noteid'] = $id;
+		return $fileInfo;
 	}
 	
 	private static function createImageMDFile($imageId, $extension){
@@ -529,6 +533,8 @@ type_: 4";
 	 * @param array $note
 	 */
 	public static function fixJoplinFileMeta($checknote, $notebooks, $tags, $fileTags){
+		$createdTagFiles = [];
+		$deletedTagNotes = [];
 		// Only update files on PROPFIND, not on PUT
 		if($_SERVER['REQUEST_METHOD']!='PROPFIND' ||
 				strpos(basename($checknote['fileinfo']['path']), '.')===0){
@@ -539,16 +545,18 @@ type_: 4";
 		if(empty($note['notemetadata']['id'])){
 			$id = md5(uniqid(mt_rand(), true));
 			$note['notemetadata']['id'] = $id;
-			if(empty($note['notemetadata']['type_'])){
-				$note['notemetadata']['type_'] = 1;
-			}
+		}
+		if(empty($note['notemetadata']['type_'])){
+			$note['notemetadata']['type_'] = 1;
 		}
 		if(!empty($note['notemetadata']['type_']) &&
 				$note['notemetadata']['type_']==1 &&
 				empty($note['notemetadata']['parent_id'])){
 			$path = preg_replace('|^files/|', '', $note['fileinfo']['path']);
 			$dir = dirname($path);
-			$note['notemetadata']['parent_id'] = $notebooks[$dir]['id'];
+			if(!empty($notebooks[$dir])){
+				$note['notemetadata']['parent_id'] = $notebooks[$dir]['id'];
+			}
 		}
 		//$noteDate = date("Y-m-d\TH:i:s.000\Z", $note['fileinfo']['mtime']);
 		$noteDate = $note['fileinfo']['mtime'];
@@ -601,6 +609,7 @@ type_: 4";
 				$tag_id = array_search($note['notemetadata']['title'], $tags);
 				if(!empty($tag_id)){
 					\OCP\Util::writeLog('Notes', 'Deleting tag/file mapping '.$note['path'], \OCP\Util::WARN);
+					$deletedTagNotes[] = $note;
 					\OC\Files\Filesystem::unlink($note['path']);
 				}
 			}
@@ -610,10 +619,10 @@ type_: 4";
 		foreach($note['tags'] as $tag){
 			if(!in_array($tag['name'], array_values($tags))){
 				// Write tag file, update $tags
-				$path = preg_replace('|^files/|', '', $note['fileinfo']['path']);
-				$dir = dirname($path);
 				\OCP\Util::writeLog('Notes', 'Writing tag file '.$tag['name'].'-->'.serialize($tags), \OCP\Util::WARN);
-				$tag_id = self::createTagMDFile($notebooks, $tag['name']);
+				$tagNoteInfo = self::createTagMDFile($notebooks, $tag['name']);
+				$tag_id = $tagNoteInfo['noteid'];
+				$createdTagFiles[] = $tagNoteInfo;
 				$tags[$tag_id] = $tag['name'];
 			}
 			$fileTagNames = empty($fileTags[$note['notemetadata']['id']])?[]:
@@ -622,10 +631,9 @@ type_: 4";
 				}, $fileTags[$note['notemetadata']['id']]);
 			if(!in_array($tag['name'], $fileTagNames)){
 				// Write tag mapping, update $fileTags
-				$path = preg_replace('|^files/|', '', $note['fileinfo']['path']);
-				$dir = dirname($path);
 				$tag_id = array_search($tag['name'], $tags);
-				self::createTagMappingMDFile($dir, $note['notemetadata']['id'], $notebooks, $tag_id);
+				$mappingNoteInfo = self::createTagMappingMDFile($note['notemetadata']['id'], $notebooks, $tag_id);
+				$createdTagFiles[] = $mappingNoteInfo;
 				$fileTags[$note['notemetadata']['id']][] = $tag_id;
 			}
 		}
@@ -656,6 +664,9 @@ type_: 4";
 			$path = preg_replace('|^files/|', '', $note['fileinfo']['path']);
 			\OC\Files\Filesystem::touch($path, $note['fileinfo']['mtime']);
 		}
+		
+		\OCP\Util::writeLog('Notes', 'Created tag files: '.count($createdTagFiles), \OCP\Util::WARN);
+		return ['createdFiles'=>$createdTagFiles, 'deletedNotes'=>$deletedTagNotes];
 	}
 	
 	private static function myempty($meta, $key){
@@ -726,6 +737,7 @@ type_: 4";
 	}
 	
 	public static function parseJoplinFileMeta($rawContent){
+		$rawContent = ltrim($rawContent);
 		$meta = array();
 		if(empty($rawContent)){
 			return $meta;
@@ -748,7 +760,8 @@ type_: 4";
 		return $meta;
 	}
 	
-public static function parsePicoFileMeta($rawContent, array $headers=[]){
+	public static function parsePicoFileMeta($rawContent, array $headers=[]){
+		$rawContent = ltrim($rawContent);
 		$meta = array();
 		$pattern = "/^(\/(\*)|---)[[:blank:]]*(?:\r)?\n"
 				. "(?:(.*?)(?:\r)?\n)?(?(2)\*\/|---)[[:blank:]]*(?:(?:\r)?\n|$)/s";
@@ -844,7 +857,7 @@ public static function parsePicoFileMeta($rawContent, array $headers=[]){
 			$tagid = array_values($tagNameId)[0];
 			$tagName = array_keys($tagNameId)[0];
 			// Get the tagged file
-			$filePath = self::$NOTES_DIR.$fileMeta['note_id'].".md";
+			$filePath = self::$NOTES_DIR.'.'.$fileMeta['note_id'].".md";
 			$fileContent = \OC\Files\Filesystem::file_get_contents($filePath);
 			$joplinMeta = self::parseJoplinFileMeta($fileContent);
 			$fileInfo = \OC\Files\Filesystem::getFileInfo($filePath);
@@ -896,6 +909,9 @@ public static function parsePicoFileMeta($rawContent, array $headers=[]){
 		}
 		elseif($fileMeta['type_']=='4'){
 			$fileMeta['path'] = '.resource/.'.$fileMeta['id'].'.md';
+		}
+		elseif($fileMeta['type_']=='5' || $fileMeta['type_']=='6'){
+			$fileMeta['path'] = '.'.$fileMeta['id'].'.md';
 		}
 		else{
 			$fileMeta['path'] = trim($folder, '/').'/'.$fileMeta['title'].'.md';

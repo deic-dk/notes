@@ -135,13 +135,27 @@ class OC_Connector_Sabre_Notes_Directory extends OC_Connector_Sabre_Directory
 		// Fix up parents and note metadata before serving
 		\OCP\Util::writeLog('Notes', 'Notebooks NOW: '.serialize($this->noteBooks), \OCP\Util::INFO);
 		$createdNotes = \OCA\Notes\Lib::fixJoplinParents($this->noteBooks);
+		$notesToDelete = [];
 		foreach($notes as $note){
-			\OCA\Notes\Lib::fixJoplinFileMeta($note, $this->noteBooks, $this->tags, $this->fileTags);
+			$changes = \OCA\Notes\Lib::fixJoplinFileMeta($note, $this->noteBooks, $this->tags, $this->fileTags);
 			if(empty($nodes[$note['fileinfo']['fileid']]['noteid'])){
 				$noteMeta = \OCA\Notes\Lib::getNoteMeta($note['path']);
-				$info['noteid'] = $noteMeta['id'];
-				$nodes[$note['fileinfo']['fileid']]['node'] = $this->getChild($info['name'], $info);
+				$nodes[$note['fileinfo']['fileid']]['noteid'] = $noteMeta['id'];
+				$nodes[$note['fileinfo']['fileid']]['node'] = $this->getChild($note['fileinfo']['name'],
+						$note['fileinfo']);
 			}
+			if(!empty($changes['createdFiles'])){
+				foreach($changes['createdFiles'] as $createdFile){
+					$node = $this->getChild($createdFile['name'], $createdFile);
+					$nodes[$createdFile['fileid']] = ['node'=>$node, 'noteid'=>$createdFile['noteid']];
+				}
+			}
+			if(!empty($changes['deletedNotes'])){
+				$notesToDelete = array_merge($notesToDelete, $changes['deletedNotes']);
+			}
+		}
+		foreach($notesToDelete as $toDeleteNote){
+			unset($nodes[$toDeleteNote['fileinfo']['fileid']]);
 		}
 		$allNodes = array_column(array_values($nodes), 'node');
 		foreach($dirs as $dir){
