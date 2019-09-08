@@ -132,12 +132,12 @@ class OC_Connector_Sabre_Server_notes extends OC_Connector_Sabre_Server_chooser 
 					$ret = \OC\Files\Filesystem::unlink(\OCA\Notes\Lib::$NOTES_DIR.$dir);
 				}
 			}
-		}
-		if($fileMeta['type_']=='5'){
-			// Ignore - keep tag in DB - it might be used on files outside of Notes
-		}
-		elseif($fileMeta['type_']=='6'){
-			self::removeDbTag($fileMeta['tag_id'], $fileMeta['note_id']);
+			if($fileMeta['type_']=='5'){
+				// Ignore - keep tag in DB - it might be used on files outside of Notes
+			}
+			elseif($fileMeta['type_']=='6'){
+				self::removeDbTag($fileMeta['tag_id'], $fileMeta['note_id']);
+			}
 		}
 		if(empty($ret)){
 			$ret = parent::httpDelete($uri);
@@ -158,12 +158,15 @@ class OC_Connector_Sabre_Server_notes extends OC_Connector_Sabre_Server_chooser 
 			return;
 		}
 		
+		// Get rid of weird unicode space from Evernote - dont' - changes size and breaks Joplin sync
+		//$fileContent = str_replace(' ', ' ', $fileContent);
+		
 		$fileMeta = \OCA\Notes\Lib::parseJoplinFileMeta($fileContent);
 		$path = \OCA\Notes\Lib::getPath($fileMeta, $rootNode);
 		$oldFilePath = self::getFilePath($uri);
 		
 		\OCP\Util::writeLog('Notes', 'Checking existing file '.$uri.':'.$oldFilePath, \OCP\Util::WARN);
-		if(!empty(trim($oldFilePath)) && trim($oldFilePath, '/') != trim(path, '/')){
+		if(!empty(trim($oldFilePath)) && trim($oldFilePath, '/') != trim($path, '/')){
 			$oldFileMeta = \OCA\Notes\Lib::getNoteMeta(\OCA\Notes\Lib::$NOTES_DIR.$oldFilePath);
 			if(!empty($oldFileMeta) && 
 					(empty($fileMeta['parent_id']) && !empty($oldFileMeta['parent_id']) ||
@@ -199,6 +202,23 @@ class OC_Connector_Sabre_Server_notes extends OC_Connector_Sabre_Server_chooser 
 			if(!\OC\Files\Filesystem::file_exists(\OCA\Notes\Lib::$NOTES_DIR.$dir)){
 				\OCP\Util::writeLog('Notes', 'Creating folder '.\OCA\Notes\Lib::$NOTES_DIR.$dir.':'.$path.':'.$uri, \OCP\Util::WARN);
 				\OC\Files\Filesystem::mkdir(\OCA\Notes\Lib::$NOTES_DIR.$dir);
+				// Check for notes with this parent in root (happens when syncing new notebook)
+				$datadir = OC_Config::getValue('datadirectory').'/'.\OC\Files\Filesystem::getRoot();
+				\OCP\Util::writeLog('Notes', 'Fixing up stray files '.
+						rtrim($datadir, '/').'/'.ltrim(\OCA\Notes\Lib::$NOTES_DIR, '/').'*.md', \OCP\Util::WARN);
+				$strayFiles = glob($datadir.'/'.\OCA\Notes\Lib::$NOTES_DIR.'*.md');
+				foreach($strayFiles as $file){
+					$strayMeta = \OCA\Notes\Lib::parseJoplinFileMeta(file_get_contents($file));
+					\OCP\Util::writeLog('Notes', 'Fixing up stray file '.
+							$strayMeta['parent_id'].'=='.basename($uri, '.md'), \OCP\Util::WARN);
+					if(!empty($strayMeta['parent_id']) && $strayMeta['parent_id']==basename($uri, '.md')){
+						$strayName = basename($file);
+						$strayMtime = \OC\Files\Filesystem::filemtime(\OCA\Notes\Lib::$NOTES_DIR.$strayName);
+						\OC\Files\Filesystem::rename(\OCA\Notes\Lib::$NOTES_DIR.$strayName,
+								\OCA\Notes\Lib::$NOTES_DIR.$dir.'/'.$strayName);
+						OC\Files\Filesystem::touch(\OCA\Notes\Lib::$NOTES_DIR.$dir.'/'.$strayName, $strayMtime);
+					}
+				}
 			}
 		}
 		// If creating a new tag, update db

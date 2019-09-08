@@ -830,8 +830,9 @@ type_: 4";
 			return null;
 		}
 		// Take care of todo info.
-		if($fileMeta['type_']==1 && !empty($fileMeta['is_todo'])){
+		if($fileMeta['type_']==1 && !empty($fileMeta['is_todo']) && $fileMeta['is_todo']==1){
 			$tagid = \OCA\meta_data\Tags::getTagID('todo', $user);
+			\OCA\meta_data\Tags::updateFileTag($tagid, $user, $fileId);
 			$dbMeta = self::getMeta($fileId, $tagid);
 			if(!empty($fileMeta['todo_due'])){
 				$millis = round(((int)$fileMeta['todo_due'])/1000);
@@ -904,8 +905,9 @@ type_: 4";
 				}
 			}
 		}
+		$cleanTitle = str_replace('/', '::', $fileMeta['title']);
 		if($fileMeta['type_']=='2'){
-			$fileMeta['path'] = trim($folder, '/').'/'.$fileMeta['title'].'/.'.$fileMeta['id'].'.md';
+			$fileMeta['path'] = trim($folder, '/').'/'.$cleanTitle.'/.'.$fileMeta['id'].'.md';
 		}
 		elseif($fileMeta['type_']=='4'){
 			$fileMeta['path'] = '.resource/.'.$fileMeta['id'].'.md';
@@ -914,7 +916,7 @@ type_: 4";
 			$fileMeta['path'] = '.'.$fileMeta['id'].'.md';
 		}
 		else{
-			$fileMeta['path'] = trim($folder, '/').'/'.$fileMeta['title'].'.md';
+			$fileMeta['path'] = trim($folder, '/').'/'.$cleanTitle.'.md';
 		}
 		return $fileMeta['path'];
 	}
