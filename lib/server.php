@@ -12,7 +12,8 @@ class OC_Connector_Sabre_Server_notes extends OC_Connector_Sabre_Server_chooser 
 			$dataDir = \OC_Config::getValue("datadirectory", \OC::$SERVERROOT . "/data");
 			$notesDir = $dataDir.'/'.trim(\OC\Files\Filesystem::getRoot(), '/').'/'.\OCA\Notes\Lib::$NOTES_DIR;
 			$fullPath = $notesDir.ltrim($dir, '/');
-			$check = shell_exec("grep -r '^id: ".$id."$' '".$fullPath."' | awk -F : '{print $1}'");
+			$check = shell_exec("grep -r '^id: ".$id."$' '".$fullPath.
+					"' | sed -E 's|:id: ".$id."$||'");
 			if(preg_match('|^'.$notesDir.'|', trim($check))){
 				$uri = preg_replace('|^'.$notesDir.'|', '', trim($check));
 			}

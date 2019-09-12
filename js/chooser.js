@@ -41,7 +41,8 @@ function updateNotesList(tags, data){
 "				<div class='row'>"+"\n"+
 "					<div class='col-xs-8 filelink-wrap'>"+"\n"+
 //"						<a class='name'><i class='icon-pencil deic_green icon'></i>"+"\n"+
-"						<a class='name'><input id='select-files-"+i+"' type='checkbox' class='fileselect' path='"+data[i]['fileinfo']['path']+"' />"+"\n"+
+"						<a class='name' title='"+(typeof(data[i]['fileinfo']['path'])==='undefined'?"":(data[i]['fileinfo']['path']).replace("'", "&#39;"))+
+										"'><input id='select-files-"+i+"' type='checkbox' class='fileselect' path='"+data[i]['fileinfo']['path']+"' />"+"\n"+
 "						<span class='nametext'>"+data[i]['metadata']['title']+"</span></a>"+"\n"+
 "					</div>"+"\n"+
 		(typeof(data[i]['tags'])==='undefined' || $('#loadTags li.chosen').length===1?"":mkTagIcons(data[i]['tags']))+

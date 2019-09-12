@@ -125,7 +125,8 @@ foreach ($_['notes'] as $note) {
 		<td class='notename'>
 			<div class='row'>
 				<div class='col-xs-8 filelink-wrap'>
-					<a class='name'>
+					<a class='name' title='".
+					(empty($note['fileinfo']['path'])?"":str_replace("'", "&#39;", $note['fileinfo']['path']))."'>
 					<input id='select-files-".$count."' type='checkbox' class='fileselect' path='".$note['fileinfo']['path']."'/>
 					<!--<i class='icon-pencil deic_green icon'></i>-->
 					<span class='nametext'>".$note['metadata']['title']."</span>

@@ -654,6 +654,14 @@ type_: 4";
 		
 		// Check if note has been changed
 		$diffMeta = self::noteMetaChanges($checknote['notemetadata'], $note['notemetadata']);
+		// Check for todo date that has been set to current time
+		if(!empty($diffMeta['todo_due'])){
+			$checkdate = date('Y-m-d', $checknote['notemetadata']['todo_due']/1000);
+			$notedate = date('Y-m-d', $note['notemetadata']['todo_due']/1000);
+			if($checkdate==$notedate){
+				unset($diffMeta['todo_due']);
+			}
+		}
 		if(!empty($diffMeta)){
 			\OCP\Util::writeLog('Notes', 'Note has changed '.$checknote['notemetadata']['title'].':'.
 					$checknote['notemetadata']['id'].'-->'.

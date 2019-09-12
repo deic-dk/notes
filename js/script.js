@@ -296,6 +296,8 @@ function setTableListeners(){
 	});
 	
 	$('#notestable td span.nametext').live('click', function(ev){
+		oldTop = $('#content-wrapper').scrollTop();
+		$('#content-wrapper').scrollTop(0);
 		var path = $(ev.target).closest('a').find('input.fileselect').first().attr('path');
 		var dir = OC.dirname(path);
 		var filename = OC.basename(path);
@@ -310,6 +312,7 @@ function setTableListeners(){
 			editor.init(window.aceEditor.getSession());
 		}).then(function(){
 			$('#editor_close').click(function(){
+				$('#content-wrapper').scrollTop(oldTop);
 				$('#notes').fadeTo('slow', 1);
 				$('#notebooks').fadeTo('slow', 1);
 				$('#app-content-notes #search').fadeTo('slow', 1);
