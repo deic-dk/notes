@@ -4,8 +4,8 @@ OCP\JSON::checkLoggedIn();
 OCP\JSON::checkAppEnabled('notes');
 OCP\JSON::callCheck();
 
-$action = $_POST['action'];
-$name = empty($_POST['name'])?'':$_POST['name'];
+$action = $_REQUEST['action'];
+$name = empty($_REQUEST['name'])?'':$_REQUEST['name'];
 $target = empty($_POST['target'])?'':$_POST['target'];
 $tags = empty($_POST['tags'])?[]:$_POST['tags'];
 $folders = empty($_POST['folders'])?[]:$_POST['folders'];
@@ -20,6 +20,18 @@ function doAction($name, $action, $tags, $template, $target, $folders, $position
 	$user = \OC_User::getUser();
 	$result = [];
 	switch($action){
+		case "getresource":
+			$dir = OCA\Notes\Lib::$NOTES_DIR.'.resource/';
+			$datadir = OC_Config::getValue( 'datadirectory' );
+			$imageFile = $datadir.'/'.$user.'/files/'.$dir.$name;
+			$mime = mime_content_type($imageFile);
+			if(substr($mime, 0, 10)=="text/x-tex" || substr($mime, 0, 10)=="text/plain" || $mime=="application/octet-stream"){
+				$mime = "image/svg+xml";
+			}
+			header('Content-Type: '.$mime);
+			\OC\Files\Filesystem::readfile($dir.$name);
+			exit;
+			break;
 		case "addnote":
 			// Check for existence
 			$noteinfo = OCA\Notes\Lib::getNoteMeta($name);

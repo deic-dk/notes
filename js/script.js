@@ -302,14 +302,14 @@ function setTableListeners(){
 		var dir = OC.dirname(path);
 		var filename = OC.basename(path);
 		// Text
-		window.showFileEditor(dir, filename).then(function () {
+		$.when(typeof window.showFileEditor !== 'undefined' && window.showFileEditor(dir, filename)).then(function () {
 			$('#notes').fadeTo('slow', 0.1);
 			$('#notebooks').fadeTo('slow', 0.1);
 			$('#app-content-notes #search').fadeTo('slow', 0.1);
 			// Markdown
 			var editor = new OCA.Files_Markdown.Editor($('#editor'), $('head')[0], dir);
-			window.aceEditor.setAutoScrollEditorIntoView(true);
-			editor.init(window.aceEditor.getSession());
+			typeof window.aceEditor !== 'undefined' && window.aceEditor.setAutoScrollEditorIntoView(true);
+			typeof window.aceEditor !== 'undefined' && editor.init(window.aceEditor.getSession());
 		}).then(function(){
 			$('#editor_close').click(function(){
 				$('#content-wrapper').scrollTop(oldTop);
@@ -317,7 +317,7 @@ function setTableListeners(){
 				$('#notebooks').fadeTo('slow', 1);
 				$('#app-content-notes #search').fadeTo('slow', 1);
 				// The title might have changed
-				newName = $('#md_preview h1:first').text();
+				newName = $('#preview_wrapper #md_preview h1').first().text();
 				path = $('#editor.ace_editor').attr('data-dir')+'/'+ $('#editor.ace_editor').attr('data-filename');
 				$('#notestable #fileList input.fileselect[path="'+path+'"]').parent().find('.nametext').text(newName);
 			});
@@ -468,6 +468,35 @@ $(document).ready(function() {
 	setTableListeners();
 
 	updateTags();
+	
+	OCA.Files_Markdown.Editor.prototype.getUrl = function (path) {
+		if (!path) {
+			return path;
+		}
+		if (path.substr(0, 7) === 'http://' || path.substr(0, 8) === 'https://' || path.substr(0, 3) === '://') {
+			return path;
+		}
+		else {
+			if (path.substr(0, 2) == ':/' && $('#app-content-notes:visible').length) {
+				// Support Joplin-style image links
+				path = path.replace(/:/, '/'+$('#app-content-notes:visible').attr('basedir')+'/.resource');
+			}
+			if (path.substr(0, 1) !== '/') {
+				path = this.dir + '/' + path;
+			}
+			if(path.replace(/\/\//, '/').substr(0, 17) == '/Notes/.resource/'){
+				return OC.webroot+
+	      '/apps/notes/ajax/actions.php?action=getresource&name='+path.replace(/\/\//, '/').substr(17)+'&requesttoken='+oc_requesttoken+'"';
+			}
+			else{
+				return OC.generateUrl('apps/files/ajax/download.php?dir={dir}&files={file}', {
+					dir: OC.dirname(path),
+					file: OC.basename(path)
+				});
+			}
+		}
+	};
+
 	
 });
 

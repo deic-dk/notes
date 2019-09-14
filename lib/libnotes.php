@@ -853,7 +853,7 @@ type_: 4";
 			}
 			if(isset($fileMeta['todo_completed'])){
 				$status = empty($fileMeta['todo_completed'])?'open':'done';
-				if($status!=$dbMeta['status']){
+				if(empty($dbMeta['status']) || $status!=$dbMeta['status']){
 					$keyId = \OCA\meta_data\Tags::getKeyID($tagid, 'status', $user);
 					\OCA\meta_data\Tags::updateFileKeyVal($fileId, $tagid, $keyId, $status);
 				}

@@ -36,22 +36,22 @@ function updateNotesList(tags, data){
 		$('table#notestable thead tr th#headerDelete').before(headers);
 	}
 	for (var i=0;  i<data.length; ++i) {
-		html = html + "<tr data-id='"+data[i]['fileinfo']['fileid']+"'>\n"+
-"			<td class='notename'>"+"\n"+
-"				<div class='row'>"+"\n"+
-"					<div class='col-xs-8 filelink-wrap'>"+"\n"+
-//"						<a class='name'><i class='icon-pencil deic_green icon'></i>"+"\n"+
-"						<a class='name' title='"+(typeof(data[i]['fileinfo']['path'])==='undefined'?"":(data[i]['fileinfo']['path']).replace("'", "&#39;"))+
-										"'><input id='select-files-"+i+"' type='checkbox' class='fileselect' path='"+data[i]['fileinfo']['path']+"' />"+"\n"+
-"						<span class='nametext'>"+data[i]['metadata']['title']+"</span></a>"+"\n"+
-"					</div>"+"\n"+
-		(typeof(data[i]['tags'])==='undefined' || $('#loadTags li.chosen').length===1?"":mkTagIcons(data[i]['tags']))+
-"				</div>"+"\n"+
-"			</td>"+"\n"+
-//"			<td><div class='path' title='"+(typeof(data[i]['fileinfo']['path'])==='undefined'?"":data[i]['fileinfo']['path'])+"'>"+
-//					(typeof(data[i]['fileinfo']['path'])==='undefined'?"":data[i]['fileinfo']['path'])+"</div></td>"+"\n"+
-//"			<td><div class='tags'>"+(typeof(data[i]['tags'])==='undefined'?"":data[i]['tags'].join(':'))+"</div></td>"+"\n"+
-"			<td class='date'><div class='date'>"+(typeof(data[i]['metadata']['date'])==='undefined'?"":data[i]['metadata']['date'])+"</div></td>"+"\n";
+		html = html + '<tr data-id="'+data[i]["fileinfo"]["fileid"]+'">\n'+
+'			<td class="notename">'+'\n'+
+'				<div class="row">'+'\n'+
+'					<div class="col-xs-8 filelink-wrap">'+'\n'+
+//'						<a class="name"><i class="icon-pencil deic_green icon"></i>'+'\n'+
+'						<a class="name" title="'+(typeof(data[i]["fileinfo"]["path"])==="undefined"?'':(data[i]["fileinfo"]["path"]).replace('"', '&#39;'))+
+										'"><input id="select-files-'+i+'" type="checkbox" class="fileselect" path="'+data[i]["fileinfo"]["path"]+'" />'+'\n'+
+'						<span class="nametext">'+data[i]["metadata"]["title"]+'</span></a>'+'\n'+
+'					</div>'+'\n'+
+		(typeof(data[i]["tags"])==="undefined" || $("#loadTags li.chosen").length===1?'':mkTagIcons(data[i]["tags"]))+
+'				</div>'+'\n'+
+'			</td>'+'\n'+
+//'			<td><div class="path" title="'+(typeof(data[i]["fileinfo"]["path"])==="undefined"?'':data[i]["fileinfo"]["path"])+'">'+
+//					(typeof(data[i]["fileinfo"]["path"])==="undefined"?'':data[i]["fileinfo"]["path"])+'</div></td>'+'\n'+
+//'			<td><div class="tags">'+(typeof(data[i]["tags"])==="undefined"?'':data[i]["tags"].join(":"))+'</div></td>'+'\n'+
+'			<td class="date"><div class="date">'+(typeof(data[i]["metadata"]["date"])==="undefined"?'':data[i]["metadata"]["date"])+'</div></td>'+'\n';
 		
 		if(typeof tags!=='undefined' && tags.length===1 && typeof data[i].dbkeys !=='undefined'){
 			var newfields = mkNewFields(data[i].dbkeys, data[i]['dbmetadata'], tags[0]);
