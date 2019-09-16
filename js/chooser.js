@@ -1,4 +1,6 @@
 function listNotes(){
+	var spinner = '<div id="spinner" style="display:table;margin:0 auto;"><img src="'+ OC.imagePath('core', 'loading-small.gif') +'"></div>';
+	$('#createNote').after(spinner);
 	var arr = [];
 	$('#notebooks a.chosen').each(function(){
 		var path = "";
@@ -18,6 +20,7 @@ function listNotes(){
 	});
 	$.post(OC.filePath('notes', 'ajax', 'actions.php'), {name: arr, tags: tags, action: "listnotes"} , function ( jsondata ){
 		if(jsondata.status == 'success' ) {
+			$('#spinner').remove();
 			updateNotesList(tags,  jsondata.data);
 		}
 		else{
@@ -71,7 +74,6 @@ function updateNotesList(tags, data){
 	$('.summary .info').text(i+" "+t("notes", "note"+(i>1|| i==0?"s":"")));
 	$('table.notestable tfoot tr td').attr('colspan', 5 + (typeof data.dbkeys !=='undefined'?data.dbkeys.length:0));
 	$('#notestable tr').draggable(noteDragOptions);
-
 }
 
 function mkNotesHeaders(keys){
