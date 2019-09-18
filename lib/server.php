@@ -10,7 +10,7 @@ class OC_Connector_Sabre_Server_notes extends OC_Connector_Sabre_Server_chooser 
 			$id = basename($uri, ".md");
 			$dir = dirname("/".trim($uri, "/"));
 			$dataDir = \OC_Config::getValue("datadirectory", \OC::$SERVERROOT . "/data");
-			$notesDir = $dataDir.'/'.trim(\OC\Files\Filesystem::getRoot(), '/').'/'.\OCA\Notes\Lib::$NOTES_DIR;
+			$notesDir = $dataDir.'/'.trim(\OC\Files\Filesystem::getRoot(), '/').'/'.\OCA\Notes\Lib::getNotesFolder();
 			$fullPath = $notesDir.ltrim($dir, '/');
 			$check = shell_exec("grep -r '^id: ".$id."$' '".$fullPath.
 					"' | sed -E 's|:id: ".$id."$||'");
@@ -28,7 +28,7 @@ class OC_Connector_Sabre_Server_notes extends OC_Connector_Sabre_Server_chooser 
 	private static function getTagName($tagId){
 		$dataDir = \OC_Config::getValue("datadirectory", \OC::$SERVERROOT . "/data");
 		$homedir = $dataDir.'/'.trim(\OC\Files\Filesystem::getRoot(), '/');
-		$notesDir = $homedir .'/' . \OCA\Notes\Lib::$NOTES_DIR;
+		$notesDir = $homedir .'/' . \OCA\Notes\Lib::getNotesFolder();
 		$check = shell_exec("grep -r '^id: ".$tagId."$' '".$notesDir."' | awk -F : '{print $1}'");
 		if(preg_match('|^'.$notesDir.'|', trim($check))){
 			$path = preg_replace('|^'.$homedir.'|', '', trim($check));
@@ -47,7 +47,7 @@ class OC_Connector_Sabre_Server_notes extends OC_Connector_Sabre_Server_chooser 
 		// Then get the tagged file
 		$noteUri = $joplinNoteId.'.md';
 		$notePath = self::getFilePath($noteUri);
-		$fileInfo = \OC\Files\Filesystem::getFileInfo(\OCA\Notes\Lib::$NOTES_DIR.$notePath);
+		$fileInfo = \OC\Files\Filesystem::getFileInfo(\OCA\Notes\Lib::getNotesFolder().$notePath);
 		// Then get the db tags of the tagged file
 		$filesTags = \OCA\Meta_data\Tags::dbGetFileTags([$fileInfo['fileid']]);
 		$filetags = empty($filesTags[$fileInfo['fileid']])?[]:$filesTags[$fileInfo['fileid']];
@@ -76,7 +76,7 @@ class OC_Connector_Sabre_Server_notes extends OC_Connector_Sabre_Server_chooser 
 		// Then get the tagged file
 		$noteUri = $joplinNoteId.'.md';
 		$notePath = self::getFilePath($noteUri);
-		$fileInfo = \OC\Files\Filesystem::getFileInfo(\OCA\Notes\Lib::$NOTES_DIR.$notePath);
+		$fileInfo = \OC\Files\Filesystem::getFileInfo(\OCA\Notes\Lib::getNotesFolder().$notePath);
 		// Then get the db tags of the tagged file
 		$filesTags = \OCA\Meta_data\Tags::dbGetFileTags([$fileInfo['fileid']]);
 		$filetags = empty($filesTags[$fileInfo['fileid']])?[]:$filesTags[$fileInfo['fileid']];
@@ -125,12 +125,13 @@ class OC_Connector_Sabre_Server_notes extends OC_Connector_Sabre_Server_chooser 
 		$ret = null;
 		// If this is a notebook md file, remove the containing folder
 		if(preg_match('|^\..+\.md$|', basename($uri))){
-			$fileMeta = \OCA\Notes\Lib::getNoteMeta(\OCA\Notes\Lib::$NOTES_DIR.$uri);
+			$notesDir = \OCA\Notes\Lib::getNotesFolder();
+			$fileMeta = \OCA\Notes\Lib::getNoteMeta($notesDir.$uri);
 			if($fileMeta['type_']=='2'){
 				$dir = dirname($uri);
 				if(!empty($dir) && $dir!='/'){
 					\OCP\Util::writeLog('Notes', 'Unlinking '.$dir.':'.$uri, \OCP\Util::WARN);
-					$ret = \OC\Files\Filesystem::unlink(\OCA\Notes\Lib::$NOTES_DIR.$dir);
+					$ret = \OC\Files\Filesystem::unlink($notesDir.$dir);
 				}
 			}
 			if($fileMeta['type_']=='5'){
@@ -166,9 +167,11 @@ class OC_Connector_Sabre_Server_notes extends OC_Connector_Sabre_Server_chooser 
 		$path = \OCA\Notes\Lib::getPath($fileMeta, $rootNode);
 		$oldFilePath = self::getFilePath($uri);
 		
+		$notesDir = rtrim(\OCA\Notes\Lib::getNotesFolder(), '/').'/';
+		
 		\OCP\Util::writeLog('Notes', 'Checking existing file '.$uri.':'.$oldFilePath, \OCP\Util::WARN);
 		if(!empty(trim($oldFilePath)) && trim($oldFilePath, '/') != trim($path, '/')){
-			$oldFileMeta = \OCA\Notes\Lib::getNoteMeta(\OCA\Notes\Lib::$NOTES_DIR.$oldFilePath);
+			$oldFileMeta = \OCA\Notes\Lib::getNoteMeta($notesDir.$oldFilePath);
 			if(!empty($oldFileMeta) && 
 					(empty($fileMeta['parent_id']) && !empty($oldFileMeta['parent_id']) ||
 							!empty($fileMeta['parent_id']) && empty($oldFileMeta['parent_id']) ||
@@ -177,16 +180,16 @@ class OC_Connector_Sabre_Server_notes extends OC_Connector_Sabre_Server_chooser 
 						if($fileMeta['type_']=='1'){
 					// This is a note that's being moved (to another parent notebook).
 					// We move the note.
-					$result = OCA\Notes\Lib::rename(\OCA\Notes\Lib::$NOTES_DIR.$oldFilePath,
-							\OCA\Notes\Lib::$NOTES_DIR.$path);
+							$result = OCA\Notes\Lib::rename($notesDir.$oldFilePath,
+									$notesDir.$path);
 				}
 				elseif($fileMeta['type_']=='2'){
 					// This is a notebook that's being moved (to another parent notebook).
 					// We move the whole containing folder
 					$dirPath = dirname($path);
 					$oldDirPath = dirname($oldFilePath);
-					$result = OCA\Notes\Lib::rename(\OCA\Notes\Lib::$NOTES_DIR.$oldDirPath,
-							\OCA\Notes\Lib::$NOTES_DIR.$dirPath);
+					$result = OCA\Notes\Lib::rename($notesDir.$oldDirPath,
+							$notesDir.$dirPath);
 				}
 				if(empty($result)){
 					OCP\JSON::error(array('data'=>array('title'=>'Error', 'message'=>'Could not move note, '.
@@ -200,24 +203,24 @@ class OC_Connector_Sabre_Server_notes extends OC_Connector_Sabre_Server_chooser 
 		// If creating a new notebook, i.e. putting a notebook md file, create containing folder
 		if($fileMeta['type_']=='2'){
 			$dir = dirname($path);
-			if(!\OC\Files\Filesystem::file_exists(\OCA\Notes\Lib::$NOTES_DIR.$dir)){
-				\OCP\Util::writeLog('Notes', 'Creating folder '.\OCA\Notes\Lib::$NOTES_DIR.$dir.':'.$path.':'.$uri, \OCP\Util::WARN);
-				\OC\Files\Filesystem::mkdir(\OCA\Notes\Lib::$NOTES_DIR.$dir);
+			if(!\OC\Files\Filesystem::file_exists($notesDir.$dir)){
+				\OCP\Util::writeLog('Notes', 'Creating folder '.$notesDir.$dir.':'.$path.':'.$uri, \OCP\Util::WARN);
+				\OC\Files\Filesystem::mkdir($notesDir.$dir);
 				// Check for notes with this parent in root (happens when syncing new notebook)
 				$datadir = OC_Config::getValue('datadirectory').'/'.\OC\Files\Filesystem::getRoot();
 				\OCP\Util::writeLog('Notes', 'Fixing up stray files '.
-						rtrim($datadir, '/').'/'.ltrim(\OCA\Notes\Lib::$NOTES_DIR, '/').'*.md', \OCP\Util::WARN);
-				$strayFiles = glob($datadir.'/'.\OCA\Notes\Lib::$NOTES_DIR.'*.md');
+						rtrim($datadir, '/').'/'.ltrim($notesDir, '/').'*.md', \OCP\Util::WARN);
+				$strayFiles = glob($datadir.'/'.$notesDir.'*.md');
 				foreach($strayFiles as $file){
 					$strayMeta = \OCA\Notes\Lib::parseJoplinFileMeta(file_get_contents($file));
 					\OCP\Util::writeLog('Notes', 'Fixing up stray file '.
 							$strayMeta['parent_id'].'=='.basename($uri, '.md'), \OCP\Util::WARN);
 					if(!empty($strayMeta['parent_id']) && $strayMeta['parent_id']==basename($uri, '.md')){
 						$strayName = basename($file);
-						$strayMtime = \OC\Files\Filesystem::filemtime(\OCA\Notes\Lib::$NOTES_DIR.$strayName);
-						\OC\Files\Filesystem::rename(\OCA\Notes\Lib::$NOTES_DIR.$strayName,
-								\OCA\Notes\Lib::$NOTES_DIR.$dir.'/'.$strayName);
-						OC\Files\Filesystem::touch(\OCA\Notes\Lib::$NOTES_DIR.$dir.'/'.$strayName, $strayMtime);
+						$strayMtime = \OC\Files\Filesystem::filemtime($notesDir.$strayName);
+						\OC\Files\Filesystem::rename($notesDir.$strayName,
+								$notesDir.$dir.'/'.$strayName);
+						OC\Files\Filesystem::touch($notesDir.$dir.'/'.$strayName, $strayMtime);
 					}
 				}
 			}

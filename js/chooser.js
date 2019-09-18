@@ -1,5 +1,5 @@
 function listNotes(){
-	var spinner = '<div id="spinner" style="display:table;margin:0 auto;"><img src="'+ OC.imagePath('core', 'loading-small.gif') +'"></div>';
+	var spinner = '<div id="spinner"><img src="'+ OC.imagePath('core', 'loading-small.gif') +'"></div>';
 	$('#createNote').after(spinner);
 	var arr = [];
 	$('#notebooks a.chosen').each(function(){
@@ -19,8 +19,8 @@ function listNotes(){
 		tags.push($(this).find('i').first().attr('data-tag'));
 	});
 	$.post(OC.filePath('notes', 'ajax', 'actions.php'), {name: arr, tags: tags, action: "listnotes"} , function ( jsondata ){
+		$('#spinner').remove();
 		if(jsondata.status == 'success' ) {
-			$('#spinner').remove();
 			updateNotesList(tags,  jsondata.data);
 		}
 		else{

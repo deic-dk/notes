@@ -9,14 +9,16 @@ class OC_Connector_Sabre_Notes_Directory extends OC_Connector_Sabre_Directory
 		private $noteBooks = [];
 		private $tags = [];
 		private $fileTags = [];
+		private $notesDir;
 		
 		public function __construct($path='/') {
-			//$this->path = rtrim(\OCA\Notes\Lib::$NOTES_DIR, '/').'/'.ltrim($path, '/');
+			$this->notesDir = \OCA\Notes\Lib::getNotesFolder();
+			//$this->path = rtrim($this->notesDir, '/').'/'.ltrim($path, '/');
 			$this->path = $path;
 			//$user = \OC_User::getUser();
 			//$this->info = new \OC\Files\FileInfo('/', -1, '/', array('mtime'=>0));
 			//$storage = \OC\Files\Filesystem::getStorage('/'.$user.'/');
-			//$this->info = \OC\Files\Filesystem::getFileInfo(\OCA\Notes\Lib::$NOTES_DIR);
+			//$this->info = \OC\Files\Filesystem::getFileInfo($this->notesDir);
 			$this->info = \OC\Files\Filesystem::getFileInfo($path);
 			/*$this->info = new \OC\Files\FileInfo('/', $storage, '/',
 					array('fileid'=>-1, 'mimetype'=>'httpd/unix-directory', 'mtime'=>0, 'storage'=>$storage,
@@ -101,11 +103,11 @@ class OC_Connector_Sabre_Notes_Directory extends OC_Connector_Sabre_Directory
 	 */
 	public function getChildren(){
 		// We will only be called on either /, /.resource, /.sync or /.templates
-		if(strpos($this->path, rtrim(\OCA\Notes\Lib::$NOTES_DIR, '/'))!==0){
-			\OC_Log::write('notes','Will not list outside of '.\OCA\Notes\Lib::$NOTES_DIR.'-->'.$this->path, \OC_Log::WARN);
+		if(strpos($this->path, rtrim($this->notesDir, '/'))!==0){
+			\OC_Log::write('notes','Will not list outside of '.$this->notesDir.'-->'.$this->path, \OC_Log::WARN);
 			return null;
 		}
-		elseif($this->path!=rtrim(\OCA\Notes\Lib::$NOTES_DIR, '/')){
+		elseif($this->path!=rtrim($this->notesDir, '/')){
 			\OC_Log::write('notes','Falling through for '.$this->path, \OC_Log::WARN);
 			return parent::getChildren();
 		}

@@ -13,10 +13,21 @@ require_once('apps/files_picocms/3rdparty/symfony/component/yaml/Exception/Parse
 
 class Lib {
 	
-	public static $NOTES_DIR = "Notes/";
 	public static $TEMPLATES_DIR = "Notes/.templates/";
 	public static $RESOURCE_DIRECTORIES = ["Notes/.resource", "Notes/.sync", "Notes/.templates"];
-		
+	private static $filesystemCacheTimeout = 60; // Cache file listing 10 seconds.
+	// Notice that the cache is cleared by PUT and DELETE calls and by actions addnote etc.
+	// So the only risk of inconsistency is when writing form outside of the app at the same time as from the app
+	
+	public static function getNotesFolder(){
+		$user = \OC_User::getUser();
+		return \OC_Preferences::getValue($user, 'notes', 'notesdir', 'Notes/');
+	}
+	
+	public static function setNotesFolder($user, $dir){
+		\OC_Preferences::setValue($user, 'notes','notesdir', $dir);
+	}
+	
 	public static function getDirList($dir, $depth=-1, $excludeDir=null){
 		if($depth == 0){
 			return array();
@@ -51,14 +62,14 @@ class Lib {
 	
 	public static function deleteNotebook($name, $user){
 		$dir = $name;
-		if(!empty($dir) && trim($dir, "/")!=trim(self::$NOTES_DIR, "/")){
+		if(!empty($dir) && trim($dir, "/")!=trim(self::getNotesFolder(), "/")){
 			$info = \OC\Files\Filesystem::unlink($dir);
 		}
 		return $info;
 	}
 	
 	public static function getNoteInfo($name){
-		$path = self::$NOTES_DIR.$name;
+		$path = self::getNotesFolder().$name;
 		return self::getNoteMeta($path);
 	}
 	
@@ -87,7 +98,7 @@ class Lib {
 	}
 	
 	public static function createNote($name, $user, $template, $position){
-		$path = self::$NOTES_DIR.$name;
+		$path = self::getNotesFolder().$name;
 		$filename = basename($name);
 		if(strlen($filename)<3 || strpos($filename, '.')===false || substr($filename, -3)!='.md'){
 			$path = $path.'.md';
@@ -206,8 +217,27 @@ class Lib {
 	
 	public static function getFileList($dir, $depth=-1, $excludeDir=null, $tags=[], $query='',
 			$includeResources=false){
+		$user = \OC_User::getUser();
+		$cache_key = $user.':'.$dir.':'.$depth.':'.$excludeDir.':'.implode($tags).':'.$query.':'.$includeResources;
+		if(apc_exists($cache_key)){
+			\OCP\Util::writeLog('files_sharding', 'Returning cached response for '.$dir.'-->'.$cache_key, \OC_Log::WARN);
+			return apc_fetch($cache_key);
+		}
+		else{
+			$res = self::doGetFileList($dir, $depth, $excludeDir, $tags, $query, $includeResources);
+			\OCP\Util::writeLog('files_sharding', 'Caching response for '.$dir.'-->'.$cache_key, \OC_Log::WARN);
+			apc_store($cache_key, $res, (int)self::$filesystemCacheTimeout);
+			return $res;
+		}
+	}
+	
+	private static function doGetFileList($dir, $depth=-1, $excludeDir=null, $tags=[], $query='',
+			$includeResources=false){
 		if($depth == 0){
 			return array();
+		}
+		if(empty($dir) || !\OC\Files\Filesystem::file_exists($dir)){
+			throw new \OCP\Files\NotFoundException();
 		}
 		$dirContent = \OC\Files\Filesystem::getDirectoryContent($dir);
 		$taggedFilesData = [];
@@ -395,8 +425,9 @@ class Lib {
 		$id = md5(uniqid(mt_rand(), true));
 		$parentid = "";
 		$parentDir = dirname($dir);
-		if(!empty($dir) && rtrim($dir, '/')!=rtrim(self::$NOTES_DIR, '/') && $dir!="/" &&
-				!empty($parentDir) && rtrim($parentDir, '/')!=rtrim(self::$NOTES_DIR, '/') && $parentDir!="/"){
+		$notesFolder = self::getNotesFolder();
+		if(!empty($dir) && rtrim($dir, '/')!=rtrim($notesFolder, '/') && $dir!="/" &&
+				!empty($parentDir) && rtrim($parentDir, '/')!=rtrim($notesFolder, '/') && $parentDir!="/"){
 					$parentNotebookMeta = $noteBooks[$parentDir];
 					\OCP\Util::writeLog('Notes', 'Getting parent id for: '.$parentDir.':'.serialize($parentNotebookMeta), \OCP\Util::WARN);
 					$parentid = $parentNotebookMeta['id'];
@@ -437,7 +468,7 @@ parent_id: ".$meta['parent_id']);
 		$meta = self::createNoteBookBaseMeta($noteBooks);
 		$id = $meta['id'];
 		$nowDate = $meta['date'];
-		$path = self::$NOTES_DIR.".".$id.".md";
+		$path = self::getNotesFolder().".".$id.".md";
 		$content = "$tagName
 
 id: $id
@@ -458,7 +489,7 @@ type_: 5";
 		$meta = self::createNoteBookBaseMeta($noteBooks);
 		$id = $meta['id'];
 		$nowDate = $meta['date'];
-		$path = self::$NOTES_DIR.".".$id.".md";
+		$path = self::getNotesFolder().".".$id.".md";
 		$content = "id: $id
 note_id: $noteId
 tag_id: $tagId
@@ -479,7 +510,7 @@ type_: 6";
 		$meta = self::createNoteBookBaseMeta();
 		$id = $meta['id'];
 		$nowDate = $meta['date'];
-		$path = self::$NOTES_DIR.".resource/.".$imageId.".md";
+		$path = self::getNotesFolder().".resource/.".$imageId.".md";
 		$content = "$id.$extension
 
 id: $imageId
@@ -506,7 +537,7 @@ type_: 4";
 	private static function getNotebookNote($dir){
 		$dataDir = \OC_Config::getValue("datadirectory", \OC::$SERVERROOT . "/data");
 		$homeDir = $dataDir.'/'.trim(\OC\Files\Filesystem::getRoot(), '/');
-		$notesDir = $homeDir.'/'.\OCA\Notes\Lib::$NOTES_DIR;
+		$notesDir = $homeDir.'/'.\OCA\Notes\Lib::getNotesFolder();
 		$fullPath = $notesDir.trim($dir, '/');
 		$check = shell_exec("grep '^type_: 2$' '".$fullPath."/\.*.md' | awk -F : '{print $1}'");
 		if(preg_match('|^'.$notesDir.'|', trim($check))){
@@ -535,6 +566,7 @@ type_: 4";
 	public static function fixJoplinFileMeta($checknote, $notebooks, $tags, $fileTags){
 		$createdTagFiles = [];
 		$deletedTagNotes = [];
+		$notesDir = self::getNotesFolder();
 		// Only update files on PROPFIND, not on PUT
 		if($_SERVER['REQUEST_METHOD']!='PROPFIND' ||
 				strpos(basename($checknote['fileinfo']['path']), '.')===0){
@@ -594,7 +626,7 @@ type_: 4";
 			$filesTags = \OCA\meta_data\Tags::dbGetFileTags($note['fileinfo']['fileid']);
 			$fileTags = $filesTags[$note['fileinfo']['fileid']];
 			if(!in_array($tagid, $fileTags)){
-				if(!empty($note['path']) && trim($note['path'], '/')!=trim(self::$NOTES_DIR, '/')){
+				if(!empty($note['path']) && trim($note['path'], '/')!=trim($notesDir, '/')){
 					\OCP\Util::writeLog('Notes', 'Deleting tag/file mapping '.$note['path'], \OCP\Util::WARN);
 					\OC\Files\Filesystem::unlink($note['path']);
 				}
@@ -605,7 +637,7 @@ type_: 4";
 		if($note['notemetadata']['type_']==5 && array_key_exists($note['notemetadata']['title'], $tags)){
 			$user = \OC_User::getUser();
 			$tagid = \OCA\meta_data\Tags::getTagID($note['notemetadata']['title'], $user);
-			if(empty($tagid) && trim($note['path'], '/')!=trim(self::$NOTES_DIR, '/')){
+			if(empty($tagid) && trim($note['path'], '/')!=trim($notesDir, '/')){
 				$tag_id = array_search($note['notemetadata']['title'], $tags);
 				if(!empty($tag_id)){
 					\OCP\Util::writeLog('Notes', 'Deleting tag/file mapping '.$note['path'], \OCP\Util::WARN);
@@ -644,7 +676,7 @@ type_: 4";
 			foreach($matches[0] as $match){
 				$imageId = md5(uniqid(mt_rand(), true));
 				$extension = pathinfo($matches[1][$i], PATHINFO_EXTENSION);
-				\OC\Files\Filesystem::copy($matches[1][$i], self::$NOTES_DIR.".resource/".$imageId);
+				\OC\Files\Filesystem::copy($matches[1][$i], $notesDir.".resource/".$imageId);
 				$retID = self::createImageMDFile($imageId, $extension);
 				$fixed = "![".$retID.".".$extension."](:/".$imageId.")";
 				$note['notemetadata']['content'] = str_replace($match, $fixed, $note['notemetadata']['content']);
@@ -830,9 +862,9 @@ type_: 4";
 	// Called by httpPut()
 	public static function updateMeta($fileId, $fileMeta){
 		$user = \OC_User::getUser();
-		//$tagLinkFileContent = \OC\Files\Filesystem::file_get_contents(self::$NOTES_DIR.$path);
+		//$tagLinkFileContent = \OC\Files\Filesystem::file_get_contents(self::getNotesFolder().$path);
 		\OCP\Util::writeLog('Notes', 'Updating metadata for '.serialize($fileMeta), \OCP\Util::WARN);
-		//$joplinMeta['path'] = self::$NOTES_DIR.$path;
+		//$joplinMeta['path'] = self::getNotesFolder().$path;
 		//$joplinMeta['content'] = self::getFileContent($fileContent);
 		if(empty($fileMeta['type_']) || empty($fileMeta['id'])){
 			return null;
@@ -866,7 +898,7 @@ type_: 4";
 			$tagid = array_values($tagNameId)[0];
 			$tagName = array_keys($tagNameId)[0];
 			// Get the tagged file
-			$filePath = self::$NOTES_DIR.'.'.$fileMeta['note_id'].".md";
+			$filePath = self::getNotesFolder().'.'.$fileMeta['note_id'].".md";
 			$fileContent = \OC\Files\Filesystem::file_get_contents($filePath);
 			$joplinMeta = self::parseJoplinFileMeta($fileContent);
 			$fileInfo = \OC\Files\Filesystem::getFileInfo($filePath);
@@ -892,7 +924,7 @@ type_: 4";
 	}
 	
 	private static function getDbTagIdFromJoplinTagId($tag_id){
-		$tagFileContent = \OC\Files\Filesystem::file_get_contents(self::$NOTES_DIR.
+		$tagFileContent = \OC\Files\Filesystem::file_get_contents(self::getNotesFolder().
 				$tag_id.".md");
 		$tagFileMeta = self::parseJoplinFileMeta($tagFileContent);
 		$tagName = $tagFileMeta['title'];
@@ -908,7 +940,7 @@ type_: 4";
 			foreach($rootNode->getNoteBooks() as $dir=>$note){
 				if($note['id']==$fileMeta['parent_id']){
 					$folder = $dir;
-					$folder = preg_replace('|^'.\OCA\Notes\Lib::$NOTES_DIR.'|', '', $folder);
+					$folder = preg_replace('|^'.\OCA\Notes\Lib::getNotesFolder().'|', '', $folder);
 					break;
 				}
 			}

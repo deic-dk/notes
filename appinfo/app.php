@@ -29,4 +29,5 @@ OCP\App::checkAppEnabled('meta_data');
 
 OCP\Util::addScript('notes','app');
 
+OCP\App::registerPersonal('notes', 'personalsettings');
 

@@ -31,11 +31,13 @@ OCP\Util::addStyle('notes','excel-bootstrap-table-filter-style');
 
 $tpl = new OCP\Template("notes", "main", "user");
 
-$notebooks = OCA\Notes\Lib::getDirList(OCA\Notes\Lib::$NOTES_DIR, -1, '/.');
-$notes = OCA\Notes\Lib::getFileList(OCA\Notes\Lib::$NOTES_DIR, -1, '/.');
+$notesDir = OCA\Notes\Lib::getNotesFolder();
+
+$notebooks = OCA\Notes\Lib::getDirList($notesDir, -1, '/.');
+$notes = OCA\Notes\Lib::getFileList($notesDir, -1, '/.');
 foreach($notes as &$res){
 	$res['fileinfo']['fullpath'] = $res['fileinfo']['path'];
-	$res['fileinfo']['path'] = substr(trim($res['fileinfo']['fullpath'], "/"), strlen(trim(OCA\Notes\Lib::$NOTES_DIR, "/"))+1);
+	$res['fileinfo']['path'] = substr(trim($res['fileinfo']['fullpath'], "/"), strlen(trim($notesDir, "/"))+1);
 }
 $templateFiles = OCA\Notes\Lib::getFileList(OCA\Notes\Lib::$TEMPLATES_DIR, -1, null, [], '', true);
 
@@ -46,7 +48,7 @@ foreach($templateFiles as $templateFile){
 
 \OCP\Util::writeLog('Notes', 'Got templates '.serialize($templates), \OCP\Util::WARN);
 
-$tpl->assign('notesdir', OCA\Notes\Lib::$NOTES_DIR);
+$tpl->assign('notesdir', $notesDir);
 $tpl->assign('notebooks', $notebooks);
 $tpl->assign('notes', $notes);
 $tpl->assign('templates', $templates);

@@ -417,3 +417,8 @@ td[column=spice] select option{
 .app-notes #app-navigation{
 	background-color: transparent;
 }
+
+#spinner {
+	display: inline;
+	margin:0 0 0 27%;
+}

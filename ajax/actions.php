@@ -14,14 +14,19 @@ $position = empty($_POST['position'])?'':$_POST['position'];
 
 require_once('apps/notes/lib/libnotes.php');
 
+
 doAction($name, $action, $tags, $template, $target, $folders, $position);
 
 function doAction($name, $action, $tags, $template, $target, $folders, $position){
 	$user = \OC_User::getUser();
 	$result = [];
+	$notesDir = \OCA\Notes\Lib::getNotesFolder();
 	switch($action){
+		case "setnotesfolder":
+			$noteinfo = OCA\Notes\Lib::setNotesFolder($user, $name);
+			break;
 		case "getresource":
-			$dir = OCA\Notes\Lib::$NOTES_DIR.'.resource/';
+			$dir = $notesDir.'.resource/';
 			$datadir = OC_Config::getValue( 'datadirectory' );
 			$imageFile = $datadir.'/'.$user.'/files/'.$dir.$name;
 			$mime = mime_content_type($imageFile);
@@ -141,19 +146,28 @@ function doAction($name, $action, $tags, $template, $target, $folders, $position
 			}
 			$result = [];
 			foreach($name as $nam){
-				$result = array_merge($result,
-						OCA\Notes\Lib::getFileList(ltrim($nam, "/"), -1, '/.', $tags));
+				try{
+					$result = array_merge($result,
+							OCA\Notes\Lib::getFileList(ltrim($nam, "/"), -1, '/.', $tags));
+				}
+				catch(\Exception $e){
+					$l = new OC_L10N('notes');
+					$msg = $l->t('Please define a notes folder in your preferences.').' '.
+							$e->getMessage();
+					OCP\JSON::error(array('data'=>array('title'=>'No notes folder defined',
+							'message'=>$msg)));
+				}
 			}
 			foreach($result as &$res){
 				$res['fileinfo']['fullpath'] = $res['fileinfo']['path'];
-				$res['fileinfo']['path'] = substr(trim($res['fileinfo']['fullpath'], "/"), strlen(trim(OCA\Notes\Lib::$NOTES_DIR, "/"))+1);
+				$res['fileinfo']['path'] = substr(trim($res['fileinfo']['fullpath'], "/"), strlen(trim($notesDir, "/"))+1);
 			}
 			break;
 		case "searchnotes":
 			$result = [];
 			$ret = [];
 			if(empty($folders)){
-				$folders[] = ltrim(OCA\Notes\Lib::$NOTES_DIR, "/");
+				$folders[] = ltrim($notesDir, "/");
 			}
 			foreach($folders as $folder){
 				$ret = array_merge($ret,
@@ -164,7 +178,7 @@ function doAction($name, $action, $tags, $template, $target, $folders, $position
 					continue;
 				}
 				$res['fileinfo']['fullpath'] = $res['fileinfo']['path'];
-				$res['fileinfo']['path'] = substr(trim($res['fileinfo']['fullpath'], "/"), strlen(trim(OCA\Notes\Lib::$NOTES_DIR, "/"))+1);
+				$res['fileinfo']['path'] = substr(trim($res['fileinfo']['fullpath'], "/"), strlen(trim($notesDir, "/"))+1);
 				$result[] = $res;
 			}
 			break;
