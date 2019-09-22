@@ -183,7 +183,7 @@ a.action > img {
 }
 
 td.notename {
-	height:34px;
+	height:32px;
 }
 
 table#notestable th .columntitle.name {
@@ -300,7 +300,8 @@ a:hover .delete_folder {
 }
 
 .delete_folder {
-	float: right;
+	position: absolute;
+	right: 4px;
 }
 
 #notebooks ul.jqueryFileTree a {
@@ -313,7 +314,7 @@ a:hover .delete_folder {
 }
 
 #notestable .notename a.name input {
-	margin: 4px 3px;
+	margin: 3px 3px;
 }
 
 #notestable th#headerName {
@@ -422,3 +423,12 @@ td[column=spice] select option{
 	display: inline;
 	margin:0 0 0 27%;
 }
+
+#defaultTags {
+	display: none;
+}
+
+#content.app-notes #notebooks i.toggle-notebooks, #content.app-notes #notebooks i.toggle-tags {
+	cursor: pointer;
+}
+

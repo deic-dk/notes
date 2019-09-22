@@ -18,14 +18,31 @@ class Lib {
 	private static $filesystemCacheTimeout = 60; // Cache file listing 10 seconds.
 	// Notice that the cache is cleared by PUT and DELETE calls and by actions addnote etc.
 	// So the only risk of inconsistency is when writing form outside of the app at the same time as from the app
+	private static $cacheDirtyKey = "Notes:Cache:Dirty";
 	
 	public static function getNotesFolder(){
 		$user = \OC_User::getUser();
-		return \OC_Preferences::getValue($user, 'notes', 'notesdir', 'Notes/');
+		$ret = \OC_Preferences::getValue($user, 'notes', 'notesdir', 'Notes/');
+		if(empty($ret)){
+			$ret = 'Notes/';
+		}
+		return $ret;
 	}
 	
-	public static function setNotesFolder($user, $dir){
+	public static function setNotesFolder($dir){
+		$user = \OC_User::getUser();
 		\OC_Preferences::setValue($user, 'notes','notesdir', $dir);
+	}
+	
+	// Returns comma-separated list
+	public static function getDefaultTags(){
+		$user = \OC_User::getUser();
+		return \OC_Preferences::getValue($user, 'notes', 'defaulttags', 'todo, diary');
+	}
+	
+	public static function setDefaultTags($tags){
+		$user = \OC_User::getUser();
+		\OC_Preferences::setValue($user, 'notes','defaulttags', $tags);
 	}
 	
 	public static function getDirList($dir, $depth=-1, $excludeDir=null){
@@ -55,16 +72,19 @@ class Lib {
 	}
 	
 	public static function createNotebook($name, $user){
-		$dir = $name;
+		$dir = rtrim(self::getNotesFolder(), '/').'/'.$name;
 		$info = \OC\Files\Filesystem::mkdir($dir);
+		apc_store(self::$cacheDirtyKey, true, (int)self::$filesystemCacheTimeout);
 		return $info;
 	}
 	
 	public static function deleteNotebook($name, $user){
 		$dir = $name;
-		if(!empty($dir) && trim($dir, "/")!=trim(self::getNotesFolder(), "/")){
+		if(!empty($dir) && !empty(trim($dir, "/")) && OC\Files\Filesystem::is_file($dir) &&
+				trim($dir, "/")!=trim(self::getNotesFolder(), "/")){
 			$info = \OC\Files\Filesystem::unlink($dir);
 		}
+		apc_store(self::$cacheDirtyKey, true, (int)self::$filesystemCacheTimeout);
 		return $info;
 	}
 	
@@ -111,8 +131,8 @@ class Lib {
 			$templateLines = preg_split("/\r\n|\r|\n/", $templateString);
 			array_shift($templateLines);
 			$lines = array_merge($lines, $templateLines);
-			$lines[] = '';
 		}
+		$lines[] = '';
 		$lines[] = "id: ".$id;
 		$lines[] = 'latitude: '.$position['coords']['latitude'];
 		$lines[] = 'longitude: '.$position['coords']['longitude'];
@@ -124,6 +144,10 @@ class Lib {
 			// Parse special variables if present in template: %date%, %me%
 			$lines = self::replaceSpecialVars($lines, $user, $place);
 		}
+		else{
+			$tags = [];
+		}
+		\OCP\Util::writeLog('Notes', 'Writing '.implode("\n", $lines).' to file '.$path, \OCP\Util::WARN);
 		\OC\Files\Filesystem::file_put_contents($path, implode("\n", $lines));
 		$info = \OC\Files\Filesystem::getFileInfo($path);
 		\OCP\Util::writeLog('Notes', 'Tagging '.$info['fileid'].' with '.serialize($tags), \OCP\Util::WARN);
@@ -136,6 +160,7 @@ class Lib {
 			// Insert place in note db metadata if template metadata has tag with key 'place'
 			self::setPlace($tags, $info['fileid'], $user, $place);
 		}
+		apc_store(self::$cacheDirtyKey, true, (int)self::$filesystemCacheTimeout);
 		return $info;
 	}
 	
@@ -186,6 +211,7 @@ class Lib {
 	}
 	
 	private static function replaceSpecialVars($lines, $user, $place){
+		date_default_timezone_set(ini_get("date.timezone"));
 		$date = \OC_Util::formatDate(time());
 		$displayName = \OCP\User::getDisplayName($user);
 		$place = empty($place)?'':$place;
@@ -201,9 +227,11 @@ class Lib {
 	public static function deleteNote($name, $user){
 		$path = $name;
 		\OCP\Util::writeLog('Notes', 'Deleting note '.$path, \OCP\Util::WARN);
-		if(!empty($name)){
+		if(!empty($name) && \OC\Files\Filesystem::is_file($path) &&
+				!empty(trim($name, "/")) && trim($name, "/")!=trim(self::getNotesFolder(), "/")){
 			$info = \OC\Files\Filesystem::unlink($path);
 		}
+		apc_store(self::$cacheDirtyKey, true, (int)self::$filesystemCacheTimeout);
 		return $info;
 	}
 	
@@ -219,7 +247,7 @@ class Lib {
 			$includeResources=false){
 		$user = \OC_User::getUser();
 		$cache_key = $user.':'.$dir.':'.$depth.':'.$excludeDir.':'.implode($tags).':'.$query.':'.$includeResources;
-		if(apc_exists($cache_key)){
+		if(apc_exists($cache_key) && !apc_exists(self::$cacheDirtyKey)){
 			\OCP\Util::writeLog('files_sharding', 'Returning cached response for '.$dir.'-->'.$cache_key, \OC_Log::WARN);
 			return apc_fetch($cache_key);
 		}
@@ -227,6 +255,7 @@ class Lib {
 			$res = self::doGetFileList($dir, $depth, $excludeDir, $tags, $query, $includeResources);
 			\OCP\Util::writeLog('files_sharding', 'Caching response for '.$dir.'-->'.$cache_key, \OC_Log::WARN);
 			apc_store($cache_key, $res, (int)self::$filesystemCacheTimeout);
+			apc_delete(self::$cacheDirtyKey);
 			return $res;
 		}
 	}
@@ -961,6 +990,21 @@ type_: 4";
 		return $fileMeta['path'];
 	}
 	
+	public static function mkTagsList($tags){
+		\OCP\Util::writeLog('Notes', 'Default tags '.serialize($tags), \OCP\Util::WARN);
+		$html = "<ul id='defaultTags'>";
+		foreach($tags as $value) {
+		$html .= '
+		<li data-id="tag-'.$value['id'].'">
+		<i class="icon icon-tag tag-'.self::colorTranslate($value['color']).
+		'" data-tag="'.$value['id'].'"></i>
+		<span>'.$value['name'].'</span>
+		</li>';
+		}
+		$html .= "</ul>";
+		return $html;
+	}
+	
 	public static function mkTagIcons($tags){
 		$tagwidth = 0;
 		$overflow = 0;
@@ -1003,6 +1047,23 @@ type_: 4";
 		if(strpos($color, 'color-5') !== false)  return "warning";
 		if(strpos($color, 'color-6') !== false)  return "danger";
 		return "default";
+	}
+	
+	// From https://www.geeksforgeeks.org/copy-the-entire-contents-of-a-directory-to-another-directory-in-php/
+	public function copyRec($src, $dst) {
+		$dir = opendir($src);
+		@mkdir($dst);
+		foreach(scandir($src) as $file){
+			if(($file != '.' ) && ( $file != '..' )){
+				if(is_dir($src . '/' . $file)) {
+					custom_copy($src . '/' . $file, $dst . '/' . $file);
+				}
+				else{
+					copy($src . '/' . $file, $dst . '/' . $file);
+				}
+			}
+		}
+		closedir($dir);
 	}
 
 }

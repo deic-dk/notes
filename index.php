@@ -33,13 +33,29 @@ $tpl = new OCP\Template("notes", "main", "user");
 
 $notesDir = OCA\Notes\Lib::getNotesFolder();
 
+if(!\OC\Files\Filesystem::file_exists($notesDir)){
+	\OC\Files\Filesystem::mkdir($notesDir);
+}
+
 $notebooks = OCA\Notes\Lib::getDirList($notesDir, -1, '/.');
 $notes = OCA\Notes\Lib::getFileList($notesDir, -1, '/.');
+
 foreach($notes as &$res){
 	$res['fileinfo']['fullpath'] = $res['fileinfo']['path'];
 	$res['fileinfo']['path'] = substr(trim($res['fileinfo']['fullpath'], "/"), strlen(trim($notesDir, "/"))+1);
 }
-$templateFiles = OCA\Notes\Lib::getFileList(OCA\Notes\Lib::$TEMPLATES_DIR, -1, null, [], '', true);
+
+
+$defaultTemplatesDir = dirname(__FILE__).'/lib/templates';
+$dataDir = \OC_Config::getValue("datadirectory", \OC::$SERVERROOT . "/data");
+$homeDir = $dataDir.'/'.trim(\OC\Files\Filesystem::getRoot(), '/');
+$myTemplateDir = $homeDir.'/'.OCA\Notes\Lib::$TEMPLATES_DIR;
+if(!file_exists($myTemplateDir)){
+	OCA\Notes\Lib::copyRec($defaultTemplatesDir, $myTemplateDir);
+}
+
+$templateFiles = OCA\Notes\Lib::getFileList(OCA\Notes\Lib::$TEMPLATES_DIR, -1,
+		null, [], '', true);
 
 $templates = [];
 foreach($templateFiles as $templateFile){
@@ -48,9 +64,21 @@ foreach($templateFiles as $templateFile){
 
 \OCP\Util::writeLog('Notes', 'Got templates '.serialize($templates), \OCP\Util::WARN);
 
+$defaultTagsStr = OCA\Notes\Lib::getDefaultTags();
+$defaultTagNames = array_map('trim', explode(',', $defaultTagsStr));
+$defaultTags = [];
+$user = \OC_User::getUser();
+foreach($defaultTagNames as $name){
+	$tags = \OCA\meta_data\Tags::searchTags($name, $user);
+	if(!empty($tags[0])){
+		$defaultTags[] = $tags[0];
+	}
+}
+
 $tpl->assign('notesdir', $notesDir);
 $tpl->assign('notebooks', $notebooks);
 $tpl->assign('notes', $notes);
 $tpl->assign('templates', $templates);
+$tpl->assign('default_tags', $defaultTags);
 $tpl->printPage();
 

@@ -7,9 +7,9 @@ class Notes_ObjectTree extends \OC\Connector\Sabre\ObjectTree {
 	private $notesDir;
 	
 	public function init(\Sabre\DAV\ICollection $rootNode, \OC\Files\View $view, \OC\Files\Mount\Manager $mountManager) {
-		$this->$notesDir = \OCA\Notes\Lib::getNotesFolder();
+		$this->notesDir = \OCA\Notes\Lib::getNotesFolder();
 		//$this->rootNode = $rootNode;
-		$this->rootNode = new \OC_Connector_Sabre_Notes_Directory(rtrim($this->$notesDir, '/'));
+		$this->rootNode = new \OC_Connector_Sabre_Notes_Directory(rtrim($this->notesDir, '/'));
 		$this->fileView = $view;
 		$this->mountManager = $mountManager;
 		if(empty($this->auth_user)){
@@ -34,7 +34,7 @@ class Notes_ObjectTree extends \OC\Connector\Sabre\ObjectTree {
 		}
 		// Otherwise, if it's not in .resource, .templates, .sync, it's an md file in the root
 		// We change the path to a folder matching the notebook parent
-		$filepath = rtrim($this->$notesDir, '/').'/'.$path;
+		$filepath = rtrim($this->notesDir, '/').'/'.$path;
 		
 		if(isset($this->cache[$path])) {
 			\OC_Log::write('notes','Got node for '.$path, \OC_Log::WARN);

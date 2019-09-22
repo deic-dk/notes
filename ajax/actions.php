@@ -23,7 +23,8 @@ function doAction($name, $action, $tags, $template, $target, $folders, $position
 	$notesDir = \OCA\Notes\Lib::getNotesFolder();
 	switch($action){
 		case "setnotesfolder":
-			$noteinfo = OCA\Notes\Lib::setNotesFolder($user, $name);
+			OCA\Notes\Lib::setNotesFolder($name);
+			OCA\Notes\Lib::setDefaultTags($tags);
 			break;
 		case "getresource":
 			$dir = $notesDir.'.resource/';

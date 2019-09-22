@@ -144,20 +144,27 @@ function updateTags(){
 	var fileIds = $('#notestable #fileList tr').map(function() {
     	return $(this).attr('data-id');
     }).get();
+	if(!fileIds.length){
+		return;
+	}
 	$('#loadTags ul#tags li[data-id^=tag-]').remove();
+	defaultTags = $('#defaultTags li');
+	$('#loadTags ul#tags').append(defaultTags);
 	$.ajax({
 		url: OC.filePath('meta_data', 'ajax', 'getTags.php'),
 		data: {sortValue: 'color', direction: 'asc', onlyFileId: fileIds.join(':')},
 		success: function(response){
 		if(response){
 				var tags = '';
+				$('#loadTags ul li#tags').show();
 				$.each(response['tags'].reverse(), function(key, value) {
-					$('#loadTags ul li#tags').show();
-					tags = tags+'\
-					<li data-id="tag-'+value.id+'">\
-					<i class="icon icon-tag tag-'+colorTranslate(value.color)+'" data-tag="'+value.id+'"></i>\
-					<span>'+value.name+'</span>\
-					</li>';
+					if(!$('i.icon-tag[data-tag='+value.id+']').length){
+						tags = tags+'\
+						<li data-id="tag-'+value.id+'">\
+						<i class="icon icon-tag tag-'+colorTranslate(value.color)+'" data-tag="'+value.id+'"></i>\
+						<span>'+value.name+'</span>\
+						</li>';
+					}
 				});
 				$('#loadTags ul#tags').append(tags);
 				$('#loadTags ul#tags li').click(function(ev){
@@ -448,7 +455,10 @@ $(document).ready(function() {
 	});
 	
 	$('#newnote #ok').on('click', function() {
-		
+		if($('#newnote .editnote').val().indexOf("/")<0) {
+			OC.dialogs.alert(t("notes", "Please create note inside a notebook.") ,  t("notes", "Select notebook"));
+			return;
+		}
 	  if (navigator.geolocation) {
 	    navigator.geolocation.getCurrentPosition(addNote);
 	  } else {
@@ -460,8 +470,8 @@ $(document).ready(function() {
 		$('#newnotebook').slideToggle();
 	});
 	
-	$('#newnote #cancel_join').click(function() {
-		$('#newnote .editnote').val("");
+	$('#newnote #cancel').click(function() {
+		//$('#newnote .editnote').val("");
 		$('#newnote').slideToggle();
 	});
 	
@@ -497,6 +507,31 @@ $(document).ready(function() {
 		}
 	};
 
+	$('#content.app-notes #notebooks i.toggle-notebooks').click(function(ev){
+		if($(ev.target).hasClass('icon-angle-down')){
+			$('#content.app-notes #notebooks #loadFolderTree').slideUp()
+			$(ev.target).removeClass('icon-angle-down');
+			$(ev.target).addClass('icon-angle-right')
+		}
+		else{
+			$('#content.app-notes #notebooks #loadFolderTree').slideDown()
+			$(ev.target).removeClass('icon-angle-right');
+			$(ev.target).addClass('icon-angle-down')
+		}
+	});
+	
+	$('#content.app-notes #notebooks i.toggle-tags').click(function(ev){
+		if($(ev.target).hasClass('icon-angle-down')){
+			$('#content.app-notes #notebooks #loadTags').slideUp()
+			$(ev.target).removeClass('icon-angle-down');
+			$(ev.target).addClass('icon-angle-right')
+		}
+		else{
+			$('#content.app-notes #notebooks #loadTags').slideDown()
+			$(ev.target).removeClass('icon-angle-right');
+			$(ev.target).addClass('icon-angle-down')
+		}
+	});
 	
 });
 

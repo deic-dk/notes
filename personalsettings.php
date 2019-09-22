@@ -10,5 +10,6 @@ OCP\Util::addscript('notes', 'personalsettings');
 $tmpl = new OCP\Template('notes', 'personalsettings');
 
 $tmpl->assign('notes_folder', OCA\Notes\Lib::getNotesFolder());
+$tmpl->assign('default_tags', OCA\Notes\Lib::getDefaultTags());
 
 return $tmpl->fetchPage();

@@ -144,6 +144,7 @@ class OC_Connector_Sabre_Server_notes extends OC_Connector_Sabre_Server_chooser 
 		if(empty($ret)){
 			$ret = parent::httpDelete($uri);
 		}
+		apc_store(\OCA\Notes\Lib::$cacheDirtyKey, true, (int)\OCA\Notes\Lib::$filesystemCacheTimeout);
 		return $ret;
 	}
 	
@@ -256,6 +257,7 @@ class OC_Connector_Sabre_Server_notes extends OC_Connector_Sabre_Server_chooser 
 			$this->broadcastEvent('afterWriteContent',array($path, $node));
 			\OCP\Util::writeLog('Notes', 'Updating METADATA for '.$fileId.':'.$uri.':'.$path.':'.$node->getName(), \OCP\Util::WARN);
 			\OCA\Notes\Lib::updateMeta($fileId, $fileMeta, $rootNode);
+			apc_store(\OCA\Notes\Lib::$cacheDirtyKey, true, (int)\OCA\Notes\Lib::$filesystemCacheTimeout);
 			$this->httpResponse->setHeader('Content-Length','0');
 			if($etag){
 				$this->httpResponse->setHeader('ETag', $etag);
@@ -274,6 +276,7 @@ class OC_Connector_Sabre_Server_notes extends OC_Connector_Sabre_Server_chooser 
 			$fileId = (int) substr($node->getFileId(), 0, 8);
 			\OCP\Util::writeLog('Notes', 'Writing METADATA for '.$fileId.':'.$uri.':'.$path.':'.$node->getName(), \OCP\Util::WARN);
 			\OCA\Notes\Lib::updateMeta($fileId, $fileMeta, $rootNode);
+			apc_store(\OCA\Notes\Lib::$cacheDirtyKey, true, (int)\OCA\Notes\Lib::$filesystemCacheTimeout);
 			$this->httpResponse->setHeader('Content-Length','0');
 			if($etag){
 				$this->httpResponse->setHeader('ETag', $etag);

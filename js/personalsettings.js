@@ -1,9 +1,10 @@
 function submit_form(){
-	var folder = $('#notes_folder').text();
+	var folder = $('#notes_folder').val();
+	var tags = $('#default_tags').val();
 	$.ajax({
 		type:'POST',
 		url:OC.linkTo('notes','ajax/actions.php'),
-				data:{'action': 'setnotesfolder', 'name': folder},
+				data:{'action': 'setnotesfolder', 'name': folder, 'tags': tags},
 				async:false,
 				success:function(msg){
 					$("#notes_msg").html("Settings saved");
@@ -87,9 +88,7 @@ $(document).ready(function(){
   });
 
 	$("fieldset#notesPersonalSettings #notes_settings_submit").click(function(){
-		if($('#notes_folder').val()){
-			submit_form();
-		}
+		submit_form();
 	});
   
 });

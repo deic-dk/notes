@@ -1,7 +1,7 @@
 <div id="app-content" style="transition: all 0.3s ease 0s;">
 	<div id="app-content-notes" basedir="<?php echo $_['notesdir'];?>" class="viewcontainer">
 		<div id="controls">
-		
+		<?php echo OCA\Notes\Lib::mkTagsList($_['default_tags']);?>
 			<div class="button-row">
 				<div class="actions creatable">
 					<a id="createNotebook" class="btn btn-primary btn-flat" href="#">
@@ -69,9 +69,9 @@
 	</div>
 
 	<div id="notebooks">
-		<div><i class="icon icon-folder"></i>Notebooks</div>
+		<div><i class="icon icon-folder"></i>Notebooks<i class="toggle-notebooks icon-angle-down"></i></div>
 		<div id="loadFolderTree"></div>
-		<div><i class="icon icon-tags"></i>Tags</div>
+		<div><i class="icon icon-tags"></i>Tags<i class="toggle-tags icon-angle-down"></i></div>
 		<div id="loadTags">
 			<ul id="tags"></ul>
 		</div>
