@@ -106,7 +106,7 @@ function doAction($name, $action, $tags, $template, $target, $folders, $position
 				}
 				// Delete parent_id of note's metadata.
 				// It will be updated on next propfind
-				OCA\Notes\Lib::deleteNoteId($target);
+				OCA\Notes\Lib::deleteNoteParentId($target);
 			}
 			break;
 		case "movenotebook":
@@ -124,7 +124,7 @@ function doAction($name, $action, $tags, $template, $target, $folders, $position
 				}
 				// Delete parent_id of note's metadata.
 				// It will be updated on next propfind
-				OCA\Notes\Lib::deleteNotebookId($target);
+				OCA\Notes\Lib::deleteNotebookParentId($target);
 			}
 			break;
 		case "deletenotebook":
@@ -149,7 +149,7 @@ function doAction($name, $action, $tags, $template, $target, $folders, $position
 			foreach($name as $nam){
 				try{
 					$result = array_merge($result,
-							OCA\Notes\Lib::getFileList(ltrim($nam, "/"), -1, '/.', $tags));
+							OCA\Notes\Lib::getFileList(ltrim($nam, "/"), -1, '/.', $tags, '', false, !empty($tags)));
 				}
 				catch(\Exception $e){
 					$l = new OC_L10N('notes');

@@ -240,11 +240,12 @@ class Lib {
 		$targetPath = $target;
 		\OCP\Util::writeLog('Notes', 'Moving '.$path.' into '.$targetPath, \OCP\Util::WARN);
 		$info = \OC\Files\Filesystem::rename($path, $targetPath);
+		apc_store(self::$cacheDirtyKey, true, (int)self::$filesystemCacheTimeout);
 		return $info;
 	}
 	
 	public static function getFileList($dir, $depth=-1, $excludeDir=null, $tags=[], $query='',
-			$includeResources=false){
+			$includeResources=false, $includeSubdirs=true){
 		$user = \OC_User::getUser();
 		$cache_key = $user.':'.$dir.':'.$depth.':'.$excludeDir.':'.implode($tags).':'.$query.':'.$includeResources;
 		if(apc_exists($cache_key) && !apc_exists(self::$cacheDirtyKey)){
@@ -252,7 +253,7 @@ class Lib {
 			return apc_fetch($cache_key);
 		}
 		else{
-			$res = self::doGetFileList($dir, $depth, $excludeDir, $tags, $query, $includeResources);
+			$res = self::doGetFileList($dir, $depth, $excludeDir, $tags, $query, $includeResources, $includeSubdirs);
 			\OCP\Util::writeLog('files_sharding', 'Caching response for '.$dir.'-->'.$cache_key, \OC_Log::WARN);
 			apc_store($cache_key, $res, (int)self::$filesystemCacheTimeout);
 			apc_delete(self::$cacheDirtyKey);
@@ -261,7 +262,7 @@ class Lib {
 	}
 	
 	private static function doGetFileList($dir, $depth=-1, $excludeDir=null, $tags=[], $query='',
-			$includeResources=false){
+			$includeResources=false, $includeSubdirs=true){
 		if($depth == 0){
 			return array();
 		}
@@ -315,7 +316,8 @@ class Lib {
 			$path = rtrim($dir, '/').'/'.$i['name'];
 			if($i['type']=='dir'){
 				// Ignore .resource, .sync and .templates
-				if(!$includeResources && in_array($path, self::$RESOURCE_DIRECTORIES)){
+				if(!$includeResources && in_array($path, self::$RESOURCE_DIRECTORIES) ||
+						!$includeSubdirs){
 					continue;
 				}
 				\OCP\Util::writeLog('Notes', 'Listing dir '.$path.':'.$excludeDir, \OCP\Util::WARN);
@@ -557,9 +559,9 @@ type_: 4";
 		return $id;
 	}
 	
-	public static function deleteNoteId($path){
+	public static function deleteNoteParentId($path){
 		$note = self::getNoteMeta($path);
-		unset($note['id']);
+		unset($note['parent_id']);
 		self::writeNote($note);
 	}
 	
@@ -575,9 +577,9 @@ type_: 4";
 		return $path;
 	}
 	
-	public static function deleteNotebookId($dir){
+	public static function deleteNotebookParentId($dir){
 		$path = getNotebookNote($dir);
-		self::deleteNoteId($path);
+		self::deleteNoteParentId($path);
 	}
 	
 	/**

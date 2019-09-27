@@ -178,7 +178,7 @@ class OC_Connector_Sabre_Server_notes extends OC_Connector_Sabre_Server_chooser 
 							!empty($fileMeta['parent_id']) && empty($oldFileMeta['parent_id']) ||
 							$fileMeta['parent_id']!=$oldFileMeta['parent_id'] ||
 					$fileMeta['title']!=$oldFileMeta['title'])){
-						if($fileMeta['type_']=='1'){
+				if($fileMeta['type_']=='1'){
 					// This is a note that's being moved (to another parent notebook).
 					// We move the note.
 							$result = OCA\Notes\Lib::rename($notesDir.$oldFilePath,

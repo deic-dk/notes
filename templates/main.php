@@ -156,16 +156,16 @@ foreach ($_['notes'] as $note) {
 	</div>
 </div>
 
-<div id='deleteNoteAlert' title=<?php p($l->t('Delete note confirmation'));?> style='display:none;' >
+<div id='deleteNoteAlert' title='<?php p($l->t('Delete note confirmation'));?>' style='display:none;' >
 	<p><?php p($l->t('Are you sure you want to delete this note?'));?></p>
 </div>
-<div id='deleteNotebookAlert' title=<?php p($l->t('Delete notebook confirmation'));?> style='display:none;' >
+<div id='deleteNotebookAlert' title='<?php p($l->t('Delete notebook confirmation'));?>' style='display:none;' >
 	<p><?php p($l->t('Are you sure you want to delete this notebook?'));?></p>
 </div>
-<div id='moveNoteAlert' title=<?php p($l->t('Delete note confirmation'));?> style='display:none;' >
+<div id='moveNoteAlert' title='<?php p($l->t('Move note confirmation'));?>' style='display:none;' >
 	<p><?php p($l->t('Are you sure you want to move this note?'));?></p>
 </div>
-<div id='moveNotebookAlert' title=<?php p($l->t('Delete notebook confirmation'));?> style='display:none;' >
+<div id='moveNotebookAlert' title='<?php p($l->t('Move notebook confirmation'));?>' style='display:none;' >
 	<p><?php p($l->t('Are you sure you want to move this notebook?'));?></p>
 </div>
 
