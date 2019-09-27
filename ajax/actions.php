@@ -99,14 +99,14 @@ function doAction($name, $action, $tags, $template, $target, $folders, $position
 				exit;
 			}
 			else{
+				// Delete parent_id of note's metadata.
+				// It will be updated on next propfind
+				OCA\Notes\Lib::deleteNoteParentId($name);
 				$result = OCA\Notes\Lib::rename($name, $target);
 				if(empty($result)){
 					OCP\JSON::error(array('data'=>array('title'=>'Error', 'message'=>'Could not move note')));
 					exit;
 				}
-				// Delete parent_id of note's metadata.
-				// It will be updated on next propfind
-				OCA\Notes\Lib::deleteNoteParentId($target);
 			}
 			break;
 		case "movenotebook":
@@ -117,14 +117,14 @@ function doAction($name, $action, $tags, $template, $target, $folders, $position
 				exit;
 			}
 			else{
+				// Delete parent_id of note's metadata.
+				// It will be updated on next propfind
+				OCA\Notes\Lib::deleteNotebookParentId($name);
 				$result = OCA\Notes\Lib::rename($name, $target);
 				if(empty($result)){
 					OCP\JSON::error(array('data'=>array('title'=>'Error', 'message'=>'Could not move notebook')));
 					exit;
 				}
-				// Delete parent_id of note's metadata.
-				// It will be updated on next propfind
-				OCA\Notes\Lib::deleteNotebookParentId($target);
 			}
 			break;
 		case "deletenotebook":

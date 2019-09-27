@@ -560,8 +560,11 @@ type_: 4";
 	}
 	
 	public static function deleteNoteParentId($path){
-		$note = self::getNoteMeta($path);
-		unset($note['parent_id']);
+		$note = [];
+		$note['notemetadata'] = self::getNoteMeta($path);
+		unset($note['notemetadata']['parent_id']);
+		$note['fileinfo'] = [];
+		$note['fileinfo']['path'] = $path;
 		self::writeNote($note);
 	}
 	
