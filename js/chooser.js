@@ -1,4 +1,10 @@
+listNotesRequest = false;
+
 function listNotes(){
+	if(listNotesRequest){
+		listNotesRequest.abort();
+		$('#spinner').remove();
+	}
 	var spinner = '<div id="spinner"><img src="'+ OC.imagePath('core', 'loading-small.gif') +'"></div>';
 	$('#createNote').after(spinner);
 	var arr = [];
@@ -18,8 +24,9 @@ function listNotes(){
 	$('#loadTags ul#tags li.chosen').each(function(){
 		tags.push($(this).find('i').first().attr('data-tag'));
 	});
-	$.post(OC.filePath('notes', 'ajax', 'actions.php'), {name: arr, tags: tags, action: "listnotes"} , function ( jsondata ){
+	listNotesRequest = $.post(OC.filePath('notes', 'ajax', 'actions.php'), {name: arr, tags: tags, action: "listnotes"} , function ( jsondata ){
 		$('#spinner').remove();
+		listNotesRequest = false;
 		if(jsondata.status == 'success' ) {
 			updateNotesList(tags,  jsondata.data);
 		}

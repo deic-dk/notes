@@ -373,7 +373,7 @@ class Lib {
 				$meta['date'] = empty($meta['date'])?date("Y-m-d", substr($i->getData()['mtime'], 0, 10)):$meta['date'];
 				\OCP\Util::writeLog('Notes', 'Adding file '.$path.':'.(empty($meta['title'])?'':$meta['title']).
 						':'.(empty($meta['id'])?"":$meta['id']), \OCP\Util::WARN);
-				if(!empty($meta['id']) || $includeResources){
+				if(/*!empty($meta['id'])*/!in_array($path, self::$RESOURCE_DIRECTORIES) || $includeResources){
 					$ret[] = ['metadata'=>$meta, 'notemetadata'=>$noteMeta, 'path'=>$path,
 							'dbmetadata'=>$dbMeta, 'dbkeys'=>$dbKeys, 'tags'=>$fullTags, 'fileinfo'=>$i->getData()];
 				}
@@ -959,7 +959,7 @@ type_: 4";
 	
 	private static function getDbTagIdFromJoplinTagId($tag_id){
 		$tagFileContent = \OC\Files\Filesystem::file_get_contents(self::getNotesFolder().
-				$tag_id.".md");
+				".".$tag_id.".md");
 		$tagFileMeta = self::parseJoplinFileMeta($tagFileContent);
 		$tagName = $tagFileMeta['title'];
 		$user = \OC_User::getUser();

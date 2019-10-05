@@ -2,10 +2,11 @@ table th .columntitle {
 	display: inline-block !important;
 }
 
-li
+/*Why?*/
+/*li
 {
   list-style-type: none;
-}
+}*/
 
 .newgroupform {
 	margin-left:20px;
