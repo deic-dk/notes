@@ -80,7 +80,7 @@ class Lib {
 	
 	public static function deleteNotebook($name, $user){
 		$dir = $name;
-		if(!empty($dir) && !empty(trim($dir, "/")) && OC\Files\Filesystem::is_file($dir) &&
+		if(!empty($dir) && !empty(trim($dir, "/")) && !\OC\Files\Filesystem::is_file($dir) &&
 				trim($dir, "/")!=trim(self::getNotesFolder(), "/")){
 			$info = \OC\Files\Filesystem::unlink($dir);
 		}
