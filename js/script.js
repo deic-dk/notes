@@ -144,12 +144,12 @@ function updateTags(){
 	var fileIds = $('#notestable #fileList tr').map(function() {
     	return $(this).attr('data-id');
     }).get();
+	$('#loadTags ul#tags li[data-id^=tag-]').remove();
+	defaultTags = $('#defaultTags li');
+	$('#loadTags ul#tags').append(defaultTags.clone());
 	if(!fileIds.length){
 		return;
 	}
-	$('#loadTags ul#tags li[data-id^=tag-]').remove();
-	defaultTags = $('#defaultTags li');
-	$('#loadTags ul#tags').append(defaultTags);
 	$.ajax({
 		url: OC.filePath('meta_data', 'ajax', 'getTags.php'),
 		data: {sortValue: 'color', direction: 'asc', onlyFileId: fileIds.join(':')},
@@ -411,6 +411,7 @@ function addNote(position){
 			//$('#newnotebook').slideToggle();
 			$('#newnotebook .editnote').val("");
 			listNotes();
+			updateTags();
 		}
 		else{
 			OC.dialogs.alert(t('notes',  jsondata.data.message) , t('notes',  jsondata.data.title)) ;
