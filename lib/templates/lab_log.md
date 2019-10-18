@@ -1,9 +1,9 @@
-Laboratory note
+Laboratory log entry
 
 #### %place%, %date%
 
 
-### Measurements
+### Equipment
 
 | Tables        | Are           | Cool  |
 | ------------- |:-------------:| -----:|
@@ -11,13 +11,19 @@ Laboratory note
 | col 2 is      | centered      |   12  |
 | zebra stripes | are neat      |    1  |
 
-_Comment from Joe:_
-> Keep your target clean
 
-### Chemical process
+### Users
 
-$\ce{Hg^2+ ->[I-] HgI2 ->[I-] [Hg^{II}I4]^2-}$
+- John Doe
+- Donald Duck
+- Grigorij Rasputin
 
-### Conventions
+### Purpose of use
 
-$C_p[\ce{H2O(l)}] = \pu{75.3 J // mol K}$
+
+
+### Remarks
+
+
+
+tags: log

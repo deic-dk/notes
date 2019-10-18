@@ -37,7 +37,7 @@ class Lib {
 	// Returns comma-separated list
 	public static function getDefaultTags(){
 		$user = \OC_User::getUser();
-		return \OC_Preferences::getValue($user, 'notes', 'defaulttags', 'todo, diary');
+		return \OC_Preferences::getValue($user, 'notes', 'defaulttags', 'todo, log, lab_notebook, diary');
 	}
 	
 	public static function setDefaultTags($tags){
