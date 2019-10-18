@@ -245,10 +245,10 @@ class Lib {
 	}
 	
 	public static function getFileList($dir, $depth=-1, $excludeDir=null, $tags=[], $query='',
-			$includeResources=false, $includeSubdirs=true){
+			$includeResources=false, $includeSubdirs=true, $noCache=false){
 		$user = \OC_User::getUser();
 		$cache_key = $user.':'.$dir.':'.$depth.':'.$excludeDir.':'.implode($tags).':'.$query.':'.$includeResources;
-		if(apc_exists($cache_key) && !apc_exists(self::$cacheDirtyKey)){
+		if(!$noCache && apc_exists($cache_key) && !apc_exists(self::$cacheDirtyKey)){
 			\OCP\Util::writeLog('files_sharding', 'Returning cached response for '.$dir.'-->'.$cache_key, \OC_Log::WARN);
 			return apc_fetch($cache_key);
 		}

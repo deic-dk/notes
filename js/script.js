@@ -5,7 +5,7 @@ var noteDragOptions = {
 		zIndex: 100,
 		appendTo: 'body',
 		cursorAt: { left: 24, top: 18 },
-		cursor: 'move',
+//		cursor: 'move',
 		start: function(event, ui){
 			$('div.app-notes div#notes').css('overflow-x', 'visible');
 			$('div.app-notes div#notes').css('overflow-y', 'visible');
@@ -23,7 +23,7 @@ var notebookDragOptions = {
 		zIndex: 100,
 		appendTo: 'body',
 		cursorAt: { left: 24, top: 18 },
-		cursor: 'move',
+//		cursor: 'move',
 		start: function(event, ui){
 		},
 		stop: function(event, ui) {

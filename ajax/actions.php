@@ -11,13 +11,14 @@ $tags = empty($_POST['tags'])?[]:$_POST['tags'];
 $folders = empty($_POST['folders'])?[]:$_POST['folders'];
 $template = empty($_POST['template'])?'':$_POST['template'];
 $position = empty($_POST['position'])?'':$_POST['position'];
+// Default to try the cache
+$noCache = empty($_POST['noCache'])||$_POST['noCache']=='no'?false:true;
 
 require_once('apps/notes/lib/libnotes.php');
 
+doAction($name, $action, $tags, $template, $target, $folders, $position, $noCache);
 
-doAction($name, $action, $tags, $template, $target, $folders, $position);
-
-function doAction($name, $action, $tags, $template, $target, $folders, $position){
+function doAction($name, $action, $tags, $template, $target, $folders, $position, $noCache){
 	$user = \OC_User::getUser();
 	$result = [];
 	$notesDir = \OCA\Notes\Lib::getNotesFolder();
@@ -149,7 +150,7 @@ function doAction($name, $action, $tags, $template, $target, $folders, $position
 			foreach($name as $nam){
 				try{
 					$result = array_merge($result,
-							OCA\Notes\Lib::getFileList(ltrim($nam, "/"), -1, '/.', $tags, '', false, !empty($tags)));
+							OCA\Notes\Lib::getFileList(ltrim($nam, "/"), -1, '/.', $tags, '', false, !empty($tags), $noCache));
 				}
 				catch(\Exception $e){
 					$l = new OC_L10N('notes');

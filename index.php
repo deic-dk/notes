@@ -38,13 +38,12 @@ if(!\OC\Files\Filesystem::file_exists($notesDir)){
 }
 
 $notebooks = OCA\Notes\Lib::getDirList($notesDir, -1, '/.');
-$notes = OCA\Notes\Lib::getFileList($notesDir, -1, '/.');
+$notes = OCA\Notes\Lib::getFileList($notesDir, -1, '/.', [], '', false, false, true);
 
 foreach($notes as &$res){
 	$res['fileinfo']['fullpath'] = $res['fileinfo']['path'];
 	$res['fileinfo']['path'] = substr(trim($res['fileinfo']['fullpath'], "/"), strlen(trim($notesDir, "/"))+1);
 }
-
 
 $defaultTemplatesDir = dirname(__FILE__).'/lib/templates';
 $dataDir = \OC_Config::getValue("datadirectory", \OC::$SERVERROOT . "/data");

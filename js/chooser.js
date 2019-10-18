@@ -1,6 +1,10 @@
 listNotesRequest = false;
 
-function listNotes(){
+function listNotes(noCache){
+	// Default to not using the cache
+	if(typeof noCache === 'undefined'){
+		noCache = true;
+	}
 	if(listNotesRequest){
 		listNotesRequest.abort();
 		$('#spinner').remove();
@@ -24,7 +28,8 @@ function listNotes(){
 	$('#loadTags ul#tags li.chosen').each(function(){
 		tags.push($(this).find('i').first().attr('data-tag'));
 	});
-	listNotesRequest = $.post(OC.filePath('notes', 'ajax', 'actions.php'), {name: arr, tags: tags, action: "listnotes"} , function ( jsondata ){
+	listNotesRequest = $.post(OC.filePath('notes', 'ajax', 'actions.php'), {name: arr, tags: tags, action: "listnotes", noCache: (noCache?'yes':'no')} ,
+			function ( jsondata ){
 		$('#spinner').remove();
 		listNotesRequest = false;
 		if(jsondata.status == 'success' ) {
@@ -240,7 +245,7 @@ function createNotebookFolderTree(){
 		deleteIcons: true,
 		callback: mkDragDroppable
 }, /*single-click*/ function(file) {
-	listNotes();
+	listNotes(false);
 	//var targetPath = "" ;
 	var targetPath = $('a.chosen').first().closest('li.directory').find('a').first().attr('rel');
 	if($('a.chosen').length===1 && file===$('a.chosen').first().attr('rel')){
