@@ -140,6 +140,22 @@ function tagNote(fileid, tagid){
 	});
 }
 
+function fixTags(){
+	$('#notebooks #loadTags li').droppable(tagDropOptions);
+	$('#loadTags ul#tags li').click(function(ev){
+		if(!ev.metaKey && !ev.ctrlKey){
+			$('#loadTags ul#tags li').removeClass('chosen');
+		}
+		if($(ev.target).closest('li').hasClass('chosen')){
+			$(ev.target).closest('li').removeClass('chosen');
+		}
+		else{
+			$(ev.target).closest('li').addClass('chosen');
+		}
+		listNotes();
+	});
+}
+
 function updateTags(){
 	var fileIds = $('#notestable #fileList tr').map(function() {
     	return $(this).attr('data-id');
@@ -148,6 +164,7 @@ function updateTags(){
 	defaultTags = $('#defaultTags li');
 	$('#loadTags ul#tags').append(defaultTags.clone());
 	if(!fileIds.length){
+		fixTags();
 		return;
 	}
 	$.ajax({
@@ -167,20 +184,8 @@ function updateTags(){
 					}
 				});
 				$('#loadTags ul#tags').append(tags);
-				$('#loadTags ul#tags li').click(function(ev){
-					if(!ev.metaKey && !ev.ctrlKey){
-						$('#loadTags ul#tags li').removeClass('chosen');
-					}
-					if($(ev.target).closest('li').hasClass('chosen')){
-						$(ev.target).closest('li').removeClass('chosen');
-					}
-					else{
-						$(ev.target).closest('li').addClass('chosen');
-					}
-					listNotes();
-				});
+				fixTags();
 			}
-		$('#notebooks #loadTags li').droppable(tagDropOptions);
 		}
 	});
 }
