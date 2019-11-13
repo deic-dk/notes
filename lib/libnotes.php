@@ -26,7 +26,7 @@ class Lib {
 		if(empty($ret)){
 			$ret = 'Notes/';
 		}
-		return $ret;
+		return trim($ret, '/').'/';
 	}
 	
 	public static function setNotesFolder($dir){
