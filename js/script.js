@@ -322,8 +322,10 @@ function setTableListeners(){
 			var editor = new OCA.Files_Markdown.Editor($('#editor'), $('head')[0], dir);
 			typeof window.aceEditor !== 'undefined' && window.aceEditor.setAutoScrollEditorIntoView(true);
 			typeof window.aceEditor !== 'undefined' && editor.init(window.aceEditor.getSession());
+			$('#app-content-notes #controls .button-row').hide();
 		}).then(function(){
 			$('#editor_close').click(function(){
+				$('#app-content-notes #controls .button-row').show();
 				$('#content-wrapper').scrollTop(oldTop);
 				$('#notes').fadeTo('slow', 1);
 				$('#notebooks').fadeTo('slow', 1);

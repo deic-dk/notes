@@ -366,11 +366,11 @@ table#notestable tbody#fileList th div.date {
 
 
 #content.app-notes div#editor_container {
-	padding-top: 108px;
+	padding-top: 52px;
 }
 
 #content.app-notes div#editor_container div#preview_wrapper {
-	padding-top: 182px;
+	padding-top: 72px;
 }
 
 #content.app-notes div#editor_container #preview_wrapper {

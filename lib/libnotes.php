@@ -215,7 +215,9 @@ class Lib {
 		$date = \OC_Util::formatDate(time());
 		$displayName = \OCP\User::getDisplayName($user);
 		$place = empty($place)?'':$place;
-		$vars = ['%date%'=>$date, '%myname%'=>$displayName, '%place%'=>$place];
+		$vars = ['%date%'=>$date, '%me%'=>$displayName, '%place%'=>$place,
+						'{{date}}'=>$date, '{{me}}'=>$displayName, '{{place}}'=>$place
+		];
 		foreach($lines as &$line){
 			foreach($vars as $key=>$value){
 				$line = str_replace($key, $value, $line);
