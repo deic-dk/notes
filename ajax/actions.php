@@ -15,6 +15,7 @@ $position = empty($_POST['position'])?'':$_POST['position'];
 $noCache = empty($_POST['noCache'])||$_POST['noCache']=='no'?false:true;
 
 require_once('apps/notes/lib/libnotes.php');
+require_once('apps/meta_data/lib/tags.php');
 
 doAction($name, $action, $tags, $template, $target, $folders, $position, $noCache);
 
@@ -184,6 +185,15 @@ function doAction($name, $action, $tags, $template, $target, $folders, $position
 				$result[] = $res;
 			}
 			break;
+		case 'update_file_key': {
+			$result = \OCA\meta_data\Tags::updateFileKeyVal($_POST['fileId'], $_POST['tagId'],
+					$_POST['keyId'], $_POST['value']);
+			if(!empty($_POST['touch']) && $_POST['touch']!='no' && $_POST['touch']!='false'){
+				$path = \OC\Files\Filesystem::getPath($_POST['fileId']);
+				\OC\Files\Filesystem::touch($path);
+			}
+			break;
+		}
 		default:
 			//
 	}

@@ -376,17 +376,19 @@ function setTableListeners(){
 			var keyid = $('#notestable thead th div.columntitle[keyname='+keyname+']').attr('keyid');
 			var val = $(this).val();
 			$.ajax({
-				url: OC.filePath('meta_data', 'ajax', 'tagOps.php'),
+				url: OC.filePath('notes', 'ajax', 'actions.php'),
 				type: "POST",
 				data: {
-				tagOp: 'update_file_key',
+				action: 'update_file_key',
 				keyId: keyid,
 				tagId: tagid,
 				fileId: fileid,
 				//type: 'controlled',
-				value: val
+				value: val,
+				touch: 'yes'
 				},
 				success: function(result) {
+					// TODO: also touch the note file to trigger Joplin clients to pick up the metadata change (notably todo done)
 				}
 			});
 		});
