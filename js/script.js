@@ -439,7 +439,7 @@ $(document).ready(function() {
 	
 	$('a#createNote').click(function() {
 		$('#newnote').slideToggle();
-		if($('div#notes').hasClass('lowered')){
+		if($('div#notes').hasClass('lowered') && !$('div#newnotebook:visible').length){
 			$('div#notes').removeClass('lowered');
 		}
 		else{
@@ -449,7 +449,7 @@ $(document).ready(function() {
 	
 	$('a#createNotebook').click(function() {
 		$('#newnotebook').slideToggle();
-		if($('div#notes').hasClass('lowered')){
+		if($('div#notes').hasClass('lowered') && !$('div#newnote:visible').length){
 			$('div#notes').removeClass('lowered');
 		}
 		else{
