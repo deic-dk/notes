@@ -439,14 +439,22 @@ $(document).ready(function() {
 	
 	$('a#createNote').click(function() {
 		$('#newnote').slideToggle();
+		if($('div#notes').hasClass('lowered')){
+			$('div#notes').removeClass('lowered');
+		}
+		else{
+			$('div#notes').addClass('lowered');
+		}
 	});
 	
 	$('a#createNotebook').click(function() {
 		$('#newnotebook').slideToggle();
-	});
-	
-	$('a#syncNotes').click(function() {
-		$('#sync').slideToggle();
+		if($('div#notes').hasClass('lowered')){
+			$('div#notes').removeClass('lowered');
+		}
+		else{
+			$('div#notes').addClass('lowered');
+		}
 	});
 
 	$('#newnotebook #ok').on('click', function() {
@@ -471,18 +479,21 @@ $(document).ready(function() {
 		}
 	  if (navigator.geolocation) {
 	    navigator.geolocation.getCurrentPosition(addNote);
-	  } else {
+	  }
+	  else {
 	  	addNote();
 	  }
 	});
 	
 	$('#newnotebook #cancel').click(function() {
 		$('#newnotebook').slideToggle();
+		$('div#notes').removeClass('lowered');
 	});
 	
 	$('#newnote #cancel').click(function() {
 		//$('#newnote .editnote').val("");
 		$('#newnote').slideToggle();
+		$('div#notes').removeClass('lowered');
 	});
 	
 	setTableListeners();
