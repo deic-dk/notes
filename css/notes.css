@@ -374,7 +374,7 @@ table#notestable tbody#fileList th div.date {
 }
 
 #content.app-notes div#editor_container div#preview_wrapper {
-	padding-top: 72px;
+	padding-top: 126px;
 }
 
 #content.app-notes div#editor_container #preview_wrapper {
@@ -387,6 +387,8 @@ table#notestable tbody#fileList th div.date {
 
 #app-content-notes #editorcontrols {
 	margin-top: 0px;
+	position: relative;
+	z-index: 20;
 }
 #headerDelete .dropdown-filter-dropdown {
 	display: none;
@@ -435,5 +437,14 @@ td[column=spice] select option{
 
 #content.app-notes #notebooks i.toggle-notebooks, #content.app-notes #notebooks i.toggle-tags {
 	cursor: pointer;
+}
+
+@media(max-width: 1200px) {
+	div#preview_wrapper, #controls button#toggle_editor, #controls button#toggle_preview {
+		display: none;
+	}
+	div#editor_container div#editor{
+		width: 100%!important;
+	}
 }
 
