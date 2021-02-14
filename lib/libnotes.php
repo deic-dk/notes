@@ -15,7 +15,7 @@ class Lib {
 	
 	public static $TEMPLATES_DIR = "Notes/.templates/";
 	public static $RESOURCE_DIRECTORIES = ["Notes/.resource", "Notes/.sync", "Notes/.templates",
-			"Notes/.lock", "Notes/lock", "Notes/temp"];
+			"Notes/.lock", "Notes/lock", "Notes/temp", "Notes/locks"];
 	public static $filesystemCacheTimeout = 60; // Cache file listing 10 seconds.
 	// Notice that the cache is cleared by PUT and DELETE calls and by actions addnote etc.
 	// So the only risk of inconsistency is when writing form outside of the app at the same time as from the app
