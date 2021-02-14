@@ -439,6 +439,11 @@ td[column=spice] select option{
 	cursor: pointer;
 }
 
+// Hide locks folder - this is a hack...
+a[rel=Notes/locks]{
+	display: none;
+}
+
 @media(max-width: 1200px) {
 	div#preview_wrapper, #controls button#toggle_editor, #controls button#toggle_preview {
 		display: none;
