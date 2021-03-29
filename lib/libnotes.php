@@ -412,7 +412,9 @@ class Lib {
 		if(empty($note['notemetadata']['type_'])){
 			$note['notemetadata']['type_'] = 1;
 		}
-		if((int)$note['notemetadata']['type_']==2){
+		$notesFolder = self::getNotesFolder();
+		if((int)$note['notemetadata']['type_']==2 &&
+				dirname($note['notemetadata']['path'])!=rtrim($notesFolder, '/').'/locks'){
 			// Notebook md file for this directory
 			\OCP\Util::writeLog('Notes', 'Adding notebook: '.serialize($note['notemetadata']), \OCP\Util::WARN);
 			if(!empty($note['notemetadata']['id'])){

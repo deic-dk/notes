@@ -288,11 +288,12 @@ function setTableListeners(){
 		deleteNotes(paths);
 	});
 
-	$(document).click(function(e){
+	// Don't believe this is used...
+	/*$(document).click(function(e){
 		if($(e.target).attr('notename')){
 			editNote($(e.target).attr('notename'));
 		}
-	});
+	});*/
 	
 	$('#notestable tr').draggable(noteDragOptions);
 	
@@ -324,6 +325,10 @@ function setTableListeners(){
 			typeof window.aceEditor !== 'undefined' && editor.init(window.aceEditor.getSession());
 			$('#app-content-notes #controls .button-row').hide();
 		}).then(function(){
+			$('img.jop-noMdConv[src^=":/"]').each(function(){
+				var src = $(this).attr('src').replace(/:/, '/apps/notes/ajax/actions.php?action=getresource&requesttoken='+oc_requesttoken+'&name=');
+				$(this).attr('src', src);
+			});
 			$('#editor_close').click(function(){
 				$('#app-content-notes #controls .button-row').show();
 				$('#content-wrapper').scrollTop(oldTop);
