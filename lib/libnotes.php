@@ -13,9 +13,9 @@ require_once('apps/files_picocms/3rdparty/symfony/component/yaml/Exception/Parse
 
 class Lib {
 	
-	public static $TEMPLATES_DIR = "Notes/.templates/";
-	public static $RESOURCE_DIRECTORIES = ["Notes/.resource", "Notes/.sync", "Notes/.templates",
-			"Notes/.lock", "Notes/lock", "Notes/temp", "Notes/locks"];
+	private static $TEMPLATES_DIR = ".templates/";
+	private static $RESOURCE_DIRECTORIES = [".resource", ".sync", ".templates",
+			".lock", "lock", "temp", "locks"];
 	public static $filesystemCacheTimeout = 60; // Cache file listing 10 seconds.
 	// Notice that the cache is cleared by PUT and DELETE calls and by actions addnote etc.
 	// So the only risk of inconsistency is when writing form outside of the app at the same time as from the app
@@ -28,6 +28,15 @@ class Lib {
 			$ret = 'Notes/';
 		}
 		return trim($ret, '/').'/';
+	}
+	
+	public static function getTemplatesDir(){
+		return self::getNotesFolder().self::$TEMPLATES_DIR;
+	}
+	
+	public static function getResourceDirectories(){
+		$notesFolder = self::getNotesFolder();
+		return array_map(function($el) use ($notesFolder){return $notesFolder.$el;}, self::$RESOURCE_DIRECTORIES);
 	}
 	
 	public static function setNotesFolder($dir){
@@ -272,6 +281,7 @@ class Lib {
 		if(empty($dir) || !\OC\Files\Filesystem::file_exists($dir)){
 			throw new \OCP\Files\NotFoundException();
 		}
+		$resourceDirs = self::getResourceDirectories();
 		$dirContent = \OC\Files\Filesystem::getDirectoryContent($dir);
 		$taggedFilesData = [];
 		if(!empty($tags)){
@@ -319,7 +329,7 @@ class Lib {
 			$path = rtrim($dir, '/').'/'.$i['name'];
 			if($i['type']=='dir'){
 				// Ignore .resource, .sync and .templates
-				if(!$includeResources && in_array($path, self::$RESOURCE_DIRECTORIES) ||
+				if(!$includeResources && in_array($path, $resourceDirs) ||
 						!$includeSubdirs){
 					continue;
 				}
@@ -376,7 +386,7 @@ class Lib {
 				$meta['date'] = empty($meta['date'])?date("Y-m-d", substr($i->getData()['mtime'], 0, 10)):$meta['date'];
 				\OCP\Util::writeLog('Notes', 'Adding file '.$path.':'.(empty($meta['title'])?'':$meta['title']).
 						':'.(empty($meta['id'])?"":$meta['id']), \OCP\Util::WARN);
-				if(/*!empty($meta['id'])*/!in_array($path, self::$RESOURCE_DIRECTORIES) || $includeResources){
+				if(/*!empty($meta['id'])*/!in_array($path, $resourceDirs) || $includeResources){
 					$ret[] = ['metadata'=>$meta, 'notemetadata'=>$noteMeta, 'path'=>$path,
 							'dbmetadata'=>$dbMeta, 'dbkeys'=>$dbKeys, 'tags'=>$fullTags, 'fileinfo'=>$i->getData()];
 				}
@@ -1060,13 +1070,15 @@ type_: 4";
 	}
 	
 	// From https://www.geeksforgeeks.org/copy-the-entire-contents-of-a-directory-to-another-directory-in-php/
-	public function copyRec($src, $dst) {
+	public static function copyRec($src, $dst) {
 		$dir = opendir($src);
 		@mkdir($dst);
 		foreach(scandir($src) as $file){
 			if(($file != '.' ) && ( $file != '..' )){
 				if(is_dir($src . '/' . $file)) {
-					custom_copy($src . '/' . $file, $dst . '/' . $file);
+					\OCP\Util::writeLog('Notes', 'Copying dir '.$src . '/' . $file.'-->'.
+						$dst . '/' . $file, \OCP\Util::WARN);
+					self::copyRec($src . '/' . $file, $dst . '/' . $file);
 				}
 				else{
 					copy($src . '/' . $file, $dst . '/' . $file);

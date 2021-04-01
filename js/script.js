@@ -477,13 +477,27 @@ $(document).ready(function() {
 		}
 	});
 	
+	
+	
 	$('#newnote #ok').on('click', function() {
 		if($('#newnote .editnote').val().indexOf("/")<0) {
 			OC.dialogs.alert(t("notes", "Please create note inside a notebook.") ,  t("notes", "Select notebook"));
 			return;
 		}
+		
+		var options = {
+			  enableHighAccuracy: true,
+			  timeout: 5000,
+			  maximumAge: 0
+			};
+		
 	  if (navigator.geolocation) {
-	    navigator.geolocation.getCurrentPosition(addNote);
+	    navigator.geolocation.getCurrentPosition(addNote,
+	    		function(err){
+	    			OC.dialogs.alert(t('notes',  "Location information not available") , t('notes', "No location"));
+	    			addNote();
+	    		},
+	    		options);
 	  }
 	  else {
 	  	addNote();

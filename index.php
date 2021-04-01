@@ -38,7 +38,9 @@ if(!\OC\Files\Filesystem::file_exists($notesDir)){
 }
 
 $notebooks = OCA\Notes\Lib::getDirList($notesDir, -1, '/.');
+\OCP\Util::writeLog('Notes', 'Got dirs', \OCP\Util::WARN);
 $notes = OCA\Notes\Lib::getFileList($notesDir, -1, '/.', [], '', false, false, true);
+\OCP\Util::writeLog('Notes', 'Got files', \OCP\Util::WARN);
 
 foreach($notes as &$res){
 	$res['fileinfo']['fullpath'] = $res['fileinfo']['path'];
@@ -48,12 +50,12 @@ foreach($notes as &$res){
 $defaultTemplatesDir = dirname(__FILE__).'/lib/templates';
 $dataDir = \OC_Config::getValue("datadirectory", \OC::$SERVERROOT . "/data");
 $homeDir = $dataDir.'/'.trim(\OC\Files\Filesystem::getRoot(), '/');
-$myTemplateDir = $homeDir.'/'.OCA\Notes\Lib::$TEMPLATES_DIR;
+$myTemplateDir = $homeDir.'/'.OCA\Notes\Lib::getTemplatesDir();
 if(!file_exists($myTemplateDir)){
 	OCA\Notes\Lib::copyRec($defaultTemplatesDir, $myTemplateDir);
 }
 
-$templateFiles = OCA\Notes\Lib::getFileList(OCA\Notes\Lib::$TEMPLATES_DIR, -1,
+$templateFiles = OCA\Notes\Lib::getFileList(OCA\Notes\Lib::getTemplatesDir(), -1,
 		null, [], '', true);
 
 $templates = [];

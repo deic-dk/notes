@@ -112,14 +112,16 @@ class OC_Connector_Sabre_Notes_Directory extends OC_Connector_Sabre_Directory
 			return parent::getChildren();
 		}
 		require_once 'apps/notes/lib/libnotes.php';
+		$resourceDirs = \OCA\Notes\Lib::getResourceDirectories();
 		$user = \OC_User::getUser();
 		$nodes = array();
 		$notes = \OCA\Notes\Lib::getFileList($this->path, -1 , null, [], '', true);
 		$dirs = \OCA\Notes\Lib::getDirList($this->path);
 		foreach($dirs as $dir){
 			// Ignore .resource etc.
-			if(!in_array($dir, \OCA\Notes\Lib::$RESOURCE_DIRECTORIES)){
-				\OCP\Util::writeLog('Notes', 'Notebooks now: '.serialize($this->noteBooks), \OCP\Util::INFO);
+			if(!in_array($dir, $resourceDirs)){
+				\OCP\Util::writeLog('Notes', 'Notebooks now: '.
+						implode(":", $resourceDirs).'-->'.serialize($this->noteBooks), \OCP\Util::WARN);
 				$this->noteBooks[$dir] = [];
 			}
 		}
@@ -162,7 +164,7 @@ class OC_Connector_Sabre_Notes_Directory extends OC_Connector_Sabre_Directory
 		$allNodes = array_column(array_values($nodes), 'node');
 		foreach($dirs as $dir){
 			// Ignore other directories than .resource etc.
-			if(in_array($dir, \OCA\Notes\Lib::$RESOURCE_DIRECTORIES)){
+			if(in_array($dir, $resourceDirs)){
 				\OC_Log::write('notes','Adding DIR, '.$dir, \OC_Log::WARN);
 				$info = \OC\Files\Filesystem::getFileInfo($dir);
 				//$data = empty($info)?[]:\OCA\Files\Helper::formatFileInfo($info);
