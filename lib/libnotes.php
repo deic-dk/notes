@@ -21,8 +21,10 @@ class Lib {
 	// So the only risk of inconsistency is when writing form outside of the app at the same time as from the app
 	public static $cacheDirtyKey = "Notes:Cache:Dirty";
 	
-	public static function getNotesFolder(){
-		$user = \OC_User::getUser();
+	public static function getNotesFolder($user=''){
+		if(empty($user)){
+			$user = \OC_User::getUser();
+		}
 		$ret = \OC_Preferences::getValue($user, 'notes', 'notesdir', 'Notes/');
 		if(empty($ret)){
 			$ret = 'Notes/';
