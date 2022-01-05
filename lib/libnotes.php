@@ -125,7 +125,7 @@ class Lib {
 		$meta = array_merge($picoMeta, $joplinMeta);
 		$meta['path'] = $path;
 		$meta['content'] = self::getFileContent($fileContent);
-		\OCP\Util::writeLog('Notes', 'Got note '.serialize($meta), \OCP\Util::WARN);
+		\OCP\Util::writeLog('Notes', 'Got note '.serialize($meta), \OCP\Util::INFO);
 		return $meta;
 	}
 	
